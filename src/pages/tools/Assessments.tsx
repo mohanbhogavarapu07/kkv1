@@ -41,11 +41,32 @@ const assessments = [
 
 const Assessments = () => {
   const navigate = useNavigate();
-  const handleBegin = (assessmentName: string) => {
-    if (assessmentName === "Mental Fitness Index") navigate("/assessment/mental-fitness-index");
-    else if (assessmentName === "Entrepreneurial Potential Assessment") navigate("/assessment/entrepreneurial-potential");
-    else if (assessmentName === "Emotional Intelligence (EQ) Evaluator") navigate("/assessment/emotionalintelligenceevaluator");
-    // Add more navigation logic for other assessments as needed
+  const handleBegin = (assessmentSlug: string) => {
+    switch (assessmentSlug) {
+      case 'leadership-archetype':
+        navigate('/assessment/leadership');
+        break;
+      case 'resilience-score':
+        navigate('/assessment/resiliencescoreanalyzer');
+        break;
+      case 'burnout-risk':
+        navigate('/assessment/burnoutriskassessment');
+        break;
+      case 'productivity-style':
+        navigate('/assessment/productivity-style-quiz');
+        break;
+      case 'entrepreneurial-potential':
+        navigate('/assessment/entrepreneurial-potential');
+        break;
+      case 'emotional-intelligence':
+        navigate('/assessment/emotionalintelligenceevaluator');
+        break;
+      case 'mental-fitness-index':
+        navigate('/assessment/mental-fitness-index');
+        break;
+      default:
+        console.error('Unknown assessment type:', assessmentSlug);
+    }
   };
   return (
     <div>
@@ -72,7 +93,7 @@ const Assessments = () => {
               <div
                 key={assessment.slug}
                 className="bg-white p-8 flex flex-col justify-between min-h-[240px] cursor-pointer border border-gray-200 rounded-xl transition-all duration-200 hover:shadow-2xl hover:border-black hover:scale-[1.03]"
-                onClick={() => handleBegin(assessment.name)}
+                onClick={() => handleBegin(assessment.slug)}
               >
                 <div className="flex-1">
                   <h2 className="font-playfair text-xl mb-3 text-black">{assessment.name}</h2>
@@ -82,7 +103,7 @@ const Assessments = () => {
                   className="mt-4 w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition font-semibold text-sm tracking-wide"
                   onClick={e => {
                     e.stopPropagation();
-                    handleBegin(assessment.name);
+                    handleBegin(assessment.slug);
                   }}
                 >
                   Begin Assessment

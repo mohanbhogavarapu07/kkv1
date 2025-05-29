@@ -1,3 +1,4 @@
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,10 @@ import Assessments from "./pages/tools/Assessments";
 import MentalFitnessIndexPage from "./pages/assessment/MentalFitnessIndex";
 import EntrepreneurialPotential from "./pages/assessment/EntrepreneurialPotential";
 import EmotionalIntelligenceEvaluator from "./pages/assessment/EmotionalIntelligenceEvaluator";
+import ResilienceScoreAnalyzer from './pages/assessment/ResilienceScoreAnalyzer';
+import BurnoutRiskAssessment from './pages/assessment/BurnoutRiskAssessment';
+import ProductivityStyleQuiz from './pages/assessment/ProductivityStyleQuiz';
+import LeadershipAssessment from './pages/assessment/LeadershipAssessment';
 
 const queryClient = new QueryClient();
 
@@ -40,6 +45,10 @@ const App = () => (
             <Route path="/assessment/mental-fitness-index" element={<MentalFitnessIndexPage />} />
             <Route path="/assessment/entrepreneurial-potential" element={<EntrepreneurialPotential />} />
             <Route path="/assessment/emotionalintelligenceevaluator" element={<EmotionalIntelligenceEvaluator />} />
+            <Route path="/assessment/resiliencescoreanalyzer" element={<ResilienceScoreAnalyzer />} />
+            <Route path="/assessment/burnoutriskassessment" element={<BurnoutRiskAssessment />} />
+            <Route path="/assessment/productivity-style-quiz" element={<ProductivityStyleQuiz />} />
+            <Route path="/assessment/leadership" element={<LeadershipAssessment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
