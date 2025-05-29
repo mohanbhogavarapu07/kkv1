@@ -1,0 +1,16 @@
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch is up to date with 'origin/main'.
+#
+# Changes to be committed:
+#	modified:   index.html
+#	deleted:    public/favicon.ico
+#	modified:   src/components/BlogPost.tsx
+#	modified:   src/components/Navbar.tsx
+#	modified:   src/pages/Blog.tsx
+#	modified:   src/pages/BlogPost.tsx
+#	modified:   src/pages/Contact.tsx
+#
