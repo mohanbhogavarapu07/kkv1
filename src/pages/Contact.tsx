@@ -35,12 +35,17 @@ const Contact = () => {
                   <p className="text-gray-700">hello@krishnakumar.com</p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-playfair mb-2 flex items-center gap-2">
+                  <h3 className="text-lg font-playfair mb-1 flex items-center gap-0">
                     <MapPin className="w-5 h-5" />
                     Location
                   </h3>
-                  <p className="text-gray-700">Bengaluru, India</p>
-                  <p className="text-gray-700 text-sm mt-1">(Global engagement)</p>
+                  {/* <p className="text-gray-700">Bangalore, India</p>
+                  <p className="text-gray-700">(Available for global engagements)</p> */}
+                  <p className="text-gray-700">
+                    Bangalore, India<br />
+                    (Available for global engagements)
+                  </p>
+
                 </div>
                 <div>
                   <h3 className="text-lg font-playfair mb-2 flex items-center gap-2">

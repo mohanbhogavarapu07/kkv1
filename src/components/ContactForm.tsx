@@ -5,11 +5,12 @@ const ContactForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    subject: '',
     message: ''
   });
   const [status, setStatus] = useState({ type: '', message: '' });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prevState => ({
       ...prevState,
@@ -21,7 +22,7 @@ const ContactForm = () => {
     e.preventDefault();
     
     // Validate form data
-    if (!formData.name || !formData.email || !formData.message) {
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
       setStatus({ type: 'error', message: 'All fields are required' });
       return;
     }
@@ -37,6 +38,7 @@ const ContactForm = () => {
         body: JSON.stringify({
           name: formData.name.trim(),
           email: formData.email.trim(),
+          subject: formData.subject.trim(),
           message: formData.message.trim()
         })
       });
@@ -45,7 +47,7 @@ const ContactForm = () => {
 
       if (response.ok) {
         setStatus({ type: 'success', message: 'Message sent successfully!' });
-        setFormData({ name: '', email: '', message: '' }); // Clear form
+        setFormData({ name: '', email: '', subject: '', message: '' }); // Clear form
       } else {
         setStatus({ type: 'error', message: data.error || 'Failed to send message' });
       }
@@ -80,6 +82,23 @@ const ContactForm = () => {
           className="w-full p-3 border border-gray-300 rounded-sm"
           required
         />
+      </div>
+      <div>
+        <label htmlFor="subject" className="block text-lg font-playfair mb-2">Subject</label>
+        <select
+          id="subject"
+          name="subject"
+          value={formData.subject}
+          onChange={handleChange}
+          required
+          className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-black appearance-none bg-white"
+        >
+          <option value="">Select a subject</option>
+          <option value="Executive Coaching">Executive Coaching</option>
+          <option value="Strategic Consulting">Strategic Consulting</option>
+          <option value="Speaking Engagement">Speaking Engagement</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div>
         <label htmlFor="message" className="block text-lg font-playfair mb-2">Message</label>

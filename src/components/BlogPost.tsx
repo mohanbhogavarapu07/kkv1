@@ -18,15 +18,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ title, excerpt, date, slug }) => {
 
   return (
     <article className="mb-12 pb-12 border-b border-gray-200">
-      <div className="flex items-center mb-4">
-        <button
-          onClick={handleBack}
-          className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </button>
-      </div>
+      {/* Removed back button here */}
       <span className="text-xs text-gray-500 uppercase tracking-wider">{date}</span>
       <h2 className="text-2xl md:text-3xl font-playfair mt-2 mb-3">
         <Link to={`/insights/${slug}`} className="hover:text-gray-700 transition-colors">
