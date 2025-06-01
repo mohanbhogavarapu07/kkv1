@@ -16,7 +16,6 @@ import {
   Download,
   Mail
 } from "lucide-react";
-import jsPDF from 'jspdf';
 
 // =====================================
 // 🧾 TYPES & LOGIC
@@ -531,7 +530,7 @@ const scaleLabels = [
   "Strongly Agree",
 ];
 
-function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: ResilienceResults) => void, onBack: () => void }) {
+function ResilienceQuiz({ onComplete }: { onComplete: (results: ResilienceResults) => void }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -558,10 +557,6 @@ function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: Resilien
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         <div className="flex items-center justify-between mb-8">
-          <Button onClick={onBack} className="text-gray-500 hover:text-black hover:bg-gray-100 bg-transparent inline-flex items-center px-1 py-3">
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </Button>
           <div className="flex items-center gap-3">
             <Brain className="w-6 h-6 text-black" />
             <span className="text-xl font-semibold text-black">
@@ -619,12 +614,24 @@ function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: Resilien
           </CardContent>
         </Card>
         <div className="flex justify-between">
-          <Button onClick={handlePrevious} disabled={currentQuestion === 0} className="border-black text-black hover:bg-gray-100 disabled:text-gray-300 disabled:border-gray-300 bg-white inline-flex items-center px-6 py-3">
+          <Button
+            onClick={handlePrevious}
+            disabled={currentQuestion === 0}
+            className="border-2 border-black text-black bg-gray-100 disabled:bg-gray-50 disabled:text-gray-300 disabled:border-gray-300 inline-flex items-center px-6 py-3 font-medium shadow-sm"
+          >
             <ChevronLeft className="w-4 h-4 mr-2" />
-            Previous
+            <span className="font-medium">Previous</span>
           </Button>
-          <Button onClick={handleNext} disabled={currentAnswer == null} className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3">
-            {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+          <Button
+            onClick={handleNext}
+            disabled={currentAnswer == null}
+            className="bg-black text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3 font-medium shadow-sm"
+          >
+            <span className="font-medium">
+              {currentQuestion === questions.length - 1
+                ? "Complete Assessment"
+                : "Next Question"}
+            </span>
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -669,61 +676,10 @@ function ResilienceResults({
     }
   };
 
-  const handleDownloadResults = () => {
-    const doc = new jsPDF();
-    // Main Heading
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Resilience Assessment Results', 105, 20, { align: 'center' });
-    // Subheading
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 14, 35);
-    // Body
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Total Score: ${results.totalScore}`, 14, 45);
-    doc.text(`Tier: ${results.tier}`, 14, 53);
-    doc.text(`Archetype: ${results.archetype}`, 14, 61);
-    doc.text(`Burnout Risk: ${results.burnoutRisk}`, 14, 69);
-    // Section Heading
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dimension Scores:', 14, 83);
-    doc.setFont('helvetica', 'normal');
-    let y = 91;
-    doc.text(`- Emotional Endurance: ${results.subscores.emotional}/25`, 18, y); y += 8;
-    doc.text(`- Grit & Perseverance: ${results.subscores.grit}/25`, 18, y); y += 8;
-    doc.text(`- Cognitive Flexibility: ${results.subscores.cognitive}/25`, 18, y); y += 8;
-    doc.text(`- Optimism & Recovery: ${results.subscores.optimism}/25`, 18, y); y += 8;
-    // Role Model
-    doc.setFont('helvetica', 'bold');
-    doc.text('Role Model:', 14, y + 4); y += 12;
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${results.roleModel.name}`, 18, y); y += 8;
-    doc.setFont('helvetica', 'italic');
-    doc.text(`"${results.roleModel.description}"`, 18, y, { maxWidth: 180 }); y += 12;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Key Lessons:', 14, y); y += 8;
-    doc.setFont('helvetica', 'normal');
-    results.roleModel.lessons.forEach((lesson: string, i: number) => {
-      doc.text(`- ${lesson}`, 18, y + i * 8);
-    });
-    doc.save('resilience-assessment-results.pdf');
-  };
-
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto px-6 py-8 max-w-6xl">
-        {/* Back Button */}
-        {/* <div className="mb-8">
-          <Button 
-            onClick={() => window.history.back()} 
-            className="px-6 py-3 text-base bg-gray-100 text-black border-2 border-black inline-flex items-center justify-center font-medium shadow-sm"
-          >
-            <ChevronLeft className="w-5 h-5 mr-2" />
-            <span className="font-medium">Back to Assessments</span>
-          </Button>
-        </div> */}
+
 
         {/* Header with total score */}
         <div className="text-center mb-12">
@@ -1055,7 +1011,6 @@ function ResilienceResults({
           </Button>
           <Button 
             className="px-6 py-3 text-base min-w-[180px] bg-gray-100 text-black border-2 border-black inline-flex items-center justify-center font-medium shadow-sm"
-            onClick={handleDownloadResults}
           >
             <Download className="w-5 h-5 mr-2" />
             <span className="font-medium">Download Results</span>
@@ -1090,7 +1045,6 @@ export default function ResilienceScoreAnalyzer() {
             setResults(res);
             setStep("results");
           }}
-          onBack={() => setStep("intro")}
         />
       )}
       {step === "results" && results && (

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, Brain as BrainIcon, Lightbulb as LightbulbIcon, Target, Zap, RotateCcw, Calendar, Clock, CheckCircle, Download, Mail, ChevronLeft, ChevronRight, BarChart } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Brain as BrainIcon, Lightbulb as LightbulbIcon, Target, Zap, RotateCcw, Calendar, Clock, CheckCircle, Download, Mail, ChevronLeft, ChevronRight, BarChart, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import jsPDF from 'jspdf';
 
 // =========================
 // Types & Data
@@ -364,8 +365,9 @@ const AssessmentQuiz = ({ onComplete, onBack }: AssessmentQuizProps) => {
             disabled={selectedAnswer === null}
             className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3"
           >
-            <ChevronRight className="w-4 h-4 mr-2" />
+            
             {currentQuestion === questions.length - 1 ? "Complete Assessment" : "Next Question"}
+            <ChevronRight className="w-4 h-4 mr-2" />
           </Button>
         </div>
       </div>
@@ -391,6 +393,66 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
     if (score < 60) return 'w-28 h-28';
     if (score < 80) return 'w-32 h-32';
     return 'w-36 h-36';
+  };
+
+  const handleDownloadResults = () => {
+    const doc = new jsPDF();
+    // Main Heading
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Burnout Risk Assessment Results', 105, 20, { align: 'center' });
+    // Subheading
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', 14, 35);
+    // Body
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Score: ${results.totalScore}/100`, 14, 45);
+    doc.text(`Phase: ${results.phase.name}`, 14, 53);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`"${results.phase.description}"`, 14, 61, { maxWidth: 180 });
+    // Section Heading
+    doc.setFont('helvetica', 'bold');
+    doc.text('Subscores:', 14, 75);
+    doc.setFont('helvetica', 'normal');
+    let y = 83;
+    Object.entries(results.subscores).forEach(([category, score]) => {
+      doc.text(`- ${category.charAt(0).toUpperCase() + category.slice(1)}: ${score}%`, 18, y);
+      y += 8;
+    });
+    // Root Causes
+    doc.setFont('helvetica', 'bold');
+    doc.text('Root Causes:', 14, y + 4); y += 12;
+    doc.setFont('helvetica', 'normal');
+    if (results.rootCauses.length > 0) {
+      results.rootCauses.forEach((cause: string, i: number) => {
+        doc.text(`- ${cause}`, 18, y + i * 8);
+      });
+      y = y + results.rootCauses.length * 8 + 8;
+    } else {
+      doc.text('- No specific root causes identified.', 18, y + 8);
+      y = y + 16;
+    }
+    // Recovery Blueprint
+    doc.setFont('helvetica', 'bold');
+    doc.text('Recovery Blueprint:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.text('Daily:', 18, y); y += 8;
+    results.recoveryBlueprint.daily.forEach((item: string, i: number) => {
+      doc.text(`- ${item}`, 22, y + i * 8);
+    });
+    let y2 = y + results.recoveryBlueprint.daily.length * 8 + 4;
+    doc.text('Weekly:', 18, y2); y2 += 8;
+    results.recoveryBlueprint.weekly.forEach((item: string, i: number) => {
+      doc.text(`- ${item}`, 22, y2 + i * 8);
+    });
+    y2 = y2 + results.recoveryBlueprint.weekly.length * 8 + 4;
+    doc.text('Supplements:', 18, y2); y2 += 8;
+    results.recoveryBlueprint.supplements.forEach((item: string, i: number) => {
+      doc.text(`- ${item}`, 22, y2 + i * 8);
+    });
+    doc.save('burnout-risk-assessment-results.pdf');
   };
 
   return (
@@ -548,20 +610,24 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
           <Button
             onClick={onRetake}
             variant="outline"
-            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors flex items-center"
           >
+            <RefreshCcw className="w-5 h-5 mr-2" />
             Retake Assessment
           </Button>
           <Button
             variant="outline"
-            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors flex items-center"
+            onClick={handleDownloadResults}
           >
-            Download
+            <Download className="w-5 h-5 mr-2" />
+            Download Results
           </Button>
           <Button
             variant="outline"
-            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors flex items-center"
           >
+            <Mail className="w-5 h-5 mr-2" />
             Send to Email
           </Button>
         </div>
