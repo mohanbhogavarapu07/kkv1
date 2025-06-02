@@ -25,6 +25,8 @@ import LeadershipAssessment from './pages/assessment/LeadershipAssessment';
 import AdminInsights from './pages/admin/Insights';
 import AdminAnalytics from './pages/admin/Analytics';
 import { AssessmentProvider } from '@/contexts/AssessmentContext';
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +58,8 @@ const App = () => (
                 <Route path="/assessment/leadership" element={<LeadershipAssessment />} />
                 <Route path="/admin/insights" element={<AdminInsights />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsAndConditions />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>

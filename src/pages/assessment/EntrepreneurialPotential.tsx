@@ -1358,7 +1358,7 @@ const AssessmentPage: React.FC<{ onComplete: (answers: Record<string, number>) =
             Previous
           </Button>
           <Button onClick={handleNextPage} disabled={currentQuestions.some(q => getCurrentAnswer(q.id) === undefined)} className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3">
-            {isLastPage ? 'Complete Assessment' : 'Next Question'}
+            {isLastPage ? 'Complete Assessment' : 'Next '}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>

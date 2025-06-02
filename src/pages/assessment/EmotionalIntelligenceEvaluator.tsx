@@ -686,7 +686,7 @@ const AssessmentQuiz: React.FC<QuestionContainerProps> = ({ questions, onComplet
             Previous
           </Button>
           <Button onClick={handleNext} disabled={selectedAnswer === null} className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3">
-            {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+            {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next '}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
