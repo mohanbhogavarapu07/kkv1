@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import jsPDF from 'jspdf';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import EmailModal from '@/components/EmailModal';
+import { sendAssessmentResults } from '@/services/emailService';
 
 // =========================
 // Types & Data
@@ -254,13 +257,13 @@ const calculateResults = (answers: Record<number, number>): AssessmentResults =>
 const scaleLabels = ["Never", "Rarely", "Sometimes", "Often", "Always"];
 
 interface AssessmentQuizProps {
-  onComplete: (results: AssessmentResults) => void;
+  onComplete: (answers: Record<number, number>) => void;
   onBack: () => void;
 }
 
 const AssessmentQuiz = ({ onComplete, onBack }: AssessmentQuizProps) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answers, setAnswers] = useState<Record<number, number>>({});
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
   const handleAnswerSelect = (value: number) => setSelectedAnswer(value);
@@ -273,8 +276,7 @@ const AssessmentQuiz = ({ onComplete, onBack }: AssessmentQuizProps) => {
         setSelectedAnswer(null);
       } else {
         const finalAnswers = { ...answers, [questions[currentQuestion].id]: selectedAnswer };
-        const results = calculateResults(finalAnswers);
-        onComplete(results);
+        onComplete(finalAnswers);
       }
     }
   };
@@ -396,28 +398,7 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
   };
 
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-
-  const handleSendToEmail = () => {
-    setShowEmailModal(true);
-    setEmail("");
-    setEmailError("");
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    setEmailError("");
-  };
-
-  const handleEmailSend = () => {
-    if (!email.match(/^\S+@\S+\.\S+$/)) {
-      setEmailError("Please enter a valid email address.");
-      return;
-    }
-    setShowEmailModal(false);
-    // TODO: Implement actual send logic here
-  };
+  const [pdfContent, setPdfContent] = useState<jsPDF | null>(null);
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
@@ -476,7 +457,27 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
     results.recoveryBlueprint.supplements.forEach((item: string, i: number) => {
       doc.text(`- ${item}`, 22, y2 + i * 8);
     });
+    setPdfContent(doc);
     doc.save('burnout-risk-assessment-results.pdf');
+  };
+
+  const handleSendToEmail = () => {
+    if (!pdfContent) {
+      handleDownloadResults();
+    }
+    setShowEmailModal(true);
+  };
+
+  const handleEmailSend = async (email: string) => {
+    if (!pdfContent) {
+      throw new Error('PDF content not available');
+    }
+    await sendAssessmentResults({
+      email,
+      assessmentType: 'burnout-risk',
+      results,
+      pdfContent
+    });
   };
 
   return (
@@ -657,37 +658,12 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
           </Button>
         </div>
 
-        {/* Email Modal */}
-        {showEmailModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-              <h2 className="text-xl font-bold mb-4">Send Results to Email</h2>
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={handleEmailChange}
-                className="w-full p-2 border rounded-2xl mb-2"
-                required
-              />
-              {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
-              <div className="flex justify-end space-x-2 mt-4">
-                <button
-                  onClick={() => setShowEmailModal(false)}
-                  className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEmailSend}
-                  className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <EmailModal
+          isOpen={showEmailModal}
+          onClose={() => setShowEmailModal(false)}
+          onSend={handleEmailSend}
+          title="Send Burnout Risk Assessment Results"
+        />
       </div>
     </div>
   );
@@ -773,39 +749,83 @@ function Introduction({ onStart }: IntroductionProps) {
 
 const BurnoutRiskAssessment = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results'>('landing');
-  const [results, setResults] = useState<AssessmentResults | null>(null);
+  const [results, setResults] = useState<any>(null);
+  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
 
-  const handleStart = () => {
-    setCurrentView('assessment');
+  const handleStart = async () => {
+    try {
+      await startAssessment('burnout-risk');
+      setCurrentView('assessment');
+    } catch (error) {
+      console.error('Error starting assessment:', error);
+      // Handle error appropriately
+    }
   };
+  
+  const handleQuizComplete = async (answers: Record<number, number>) => {
+    try {
+      const results = calculateResults(answers);
+      
+      // Convert answers to array format for database
+      const answersArray = Object.entries(answers).map(([questionId, answer]) => ({
+        questionId: parseInt(questionId),
+        answer: answer,
+        dimension: questions.find(q => q.id === parseInt(questionId))?.category || ''
+      }));
 
-  const handleBack = () => {
-    if (currentView === 'assessment') {
-      setCurrentView('landing');
+      // Prepare complete data for backend
+      const completeData = {
+        ...results,
+        answers: answersArray,
+        assessmentType: 'burnout-risk',
+        status: 'completed',
+        progress: 100,
+        timeSpent: {
+          start: new Date().toISOString(),
+          end: new Date().toISOString()
+        }
+      };
+      
+      console.log('Data being saved to database:', completeData);
+      
+      // Send results to backend
+      await completeAssessment(completeData);
+      setResults(results);
+      setCurrentView('results');
+    } catch (error) {
+      console.error('Error completing assessment:', error);
     }
   };
 
-  const handleComplete = (assessmentResults: AssessmentResults) => {
-    setResults(assessmentResults);
-    setCurrentView('results');
+  const handleRestart = async () => {
+    try {
+      await abandonAssessment('User restarted assessment');
+      setResults(null);
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Error restarting assessment:', error);
+      // Handle error appropriately
+    }
   };
 
-  const handleRetake = () => {
-    setResults(null);
-    setCurrentView('landing');
+  const handleBackToHome = async () => {
+    try {
+      await abandonAssessment('User returned to home');
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Error returning to home:', error);
+    }
   };
 
-  return (
-    <>
-      {currentView === 'landing' && <Introduction onStart={handleStart} />}
-      {currentView === 'assessment' && (
-        <AssessmentQuiz onComplete={handleComplete} onBack={handleBack} />
-      )}
-      {currentView === 'results' && results && (
-        <ResultsDashboard results={results} onRetake={handleRetake} />
-      )}
-    </>
-  );
+  if (currentView === 'assessment') {
+    return <AssessmentQuiz onComplete={handleQuizComplete} onBack={handleBackToHome} />;
+  }
+  
+  if (currentView === 'results' && results) {
+    return <ResultsDashboard results={results} onRetake={handleRestart} />;
+  }
+  
+  return <Introduction onStart={handleStart} />;
 };
 
 export default BurnoutRiskAssessment; 

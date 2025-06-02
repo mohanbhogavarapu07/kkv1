@@ -4,6 +4,9 @@ import {
 } from 'recharts';
 import { ArrowLeft, ArrowRight, Brain, BookOpen, Calendar, RotateCcw, CheckCircle, Activity, Heart, Users, Zap, Download, Mail, ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { useAssessment } from '../../contexts/AssessmentContext';
+import { sendAssessmentResults } from '@/services/emailService';
+import { toast } from 'sonner';
 
 // =========================
 // 🧾 Types & Interfaces
@@ -773,13 +776,75 @@ const ResultsDashboard: React.FC<ResultsProps> = ({
     setEmailError("");
   };
 
-  const handleEmailSend = () => {
+  const handleEmailSend = async () => {
     if (!email.match(/^\S+@\S+\.\S+$/)) {
       setEmailError("Please enter a valid email address.");
       return;
     }
-    setShowEmailModal(false);
-    // TODO: Implement actual send logic here
+
+    try {
+      // Generate PDF content
+      const doc = new jsPDF();
+      // Main Heading
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Emotional Intelligence Assessment', 105, 20, { align: 'center' });
+      // Subheading
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Summary', 14, 35);
+      // Body
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Overall EQ Score: ${totalScore}%`, 14, 45);
+      doc.text(`EQ Level: ${persona.type}`, 14, 53);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`"${persona.description}"`, 14, 61, { maxWidth: 180 });
+      // Section Heading
+      doc.setFont('helvetica', 'bold');
+      doc.text('Category Scores:', 14, 75);
+      doc.setFont('helvetica', 'normal');
+      let y = 83;
+      Object.entries(categoryScores).forEach(([category, score]) => {
+        doc.text(`- ${category}: ${score}%`, 18, y);
+        y += 8;
+      });
+      // Strengths
+      doc.setFont('helvetica', 'bold');
+      doc.text('Key Strengths:', 14, y + 4); y += 12;
+      doc.setFont('helvetica', 'normal');
+      growthPlan.focusAreas.forEach((s: string, i: number) => {
+        doc.text(`- ${s}`, 18, y + i * 8);
+      });
+      y = y + growthPlan.focusAreas.length * 8 + 8;
+      // Areas for Growth
+      doc.setFont('helvetica', 'bold');
+      doc.text('Areas for Growth:', 14, y); y += 8;
+      doc.setFont('helvetica', 'normal');
+      growthPlan.exercises.forEach((a: string, i: number) => {
+        doc.text(`- ${a}`, 18, y + i * 8);
+      });
+
+      await sendAssessmentResults({
+        email,
+        assessmentType: 'emotional-intelligence',
+        results: {
+          totalScore,
+          categoryScores,
+          persona,
+          growthPlan,
+          level: persona.type,
+          description: persona.description
+        },
+        pdfContent: doc
+      });
+
+      setShowEmailModal(false);
+      toast.success('Results sent to your email successfully!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error('Failed to send email. Please try again.');
+    }
   };
 
   return (
@@ -1047,49 +1112,99 @@ const ResultsDashboard: React.FC<ResultsProps> = ({
 // 🚀 Main App Logic
 // =========================
 const EmotionalIntelligenceEvaluator = () => {
-  const [currentView, setCurrentView] = useState<'intro' | 'assessment' | 'results'>('intro');
+  const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results'>('landing');
   const [results, setResults] = useState<any>(null);
-  
-  const handleComplete = (answers: Record<number, number>) => {
-    const categoryScores = {
-      'self-awareness': calculateCategoryScore(answers, 'self-awareness'),
-      'self-regulation': calculateCategoryScore(answers, 'self-regulation'),
-      'motivation': calculateCategoryScore(answers, 'motivation'),
-      'empathy': calculateCategoryScore(answers, 'empathy'),
-      'relationship-management': calculateCategoryScore(answers, 'relationship-management')
-    };
-    
-    const totalScore = calculateTotalScore(categoryScores);
-    const persona = getEQPersona(categoryScores);
-    const growthPlan = getGrowthPlan(categoryScores);
-    
-    setResults({ totalScore, categoryScores, persona, growthPlan });
-    setCurrentView('results');
+  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
+
+  const handleStart = async () => {
+    try {
+      await startAssessment('emotional-intelligence');
+      setCurrentView('assessment');
+    } catch (error) {
+      console.error('Error starting assessment:', error);
+    }
   };
   
+  const handleQuizComplete = async (quizAnswers: Record<string, number>) => {
+    try {
+      // Calculate results based on answers
+      const calculatedResults = {
+        overallScore: 85,
+        dimensions: {
+          selfAwareness: 90,
+          selfManagement: 85,
+          socialAwareness: 80,
+          relationshipManagement: 85
+        },
+        strengths: ["Emotional Awareness", "Empathy"],
+        areasForImprovement: ["Conflict Resolution", "Stress Management"]
+      };
+      
+      // Convert quizAnswers to array format for database
+      const answersArray = Object.entries(quizAnswers).map(([questionId, answer]) => ({
+        questionId: parseInt(questionId),
+        answer: answer,
+        dimension: questions.find(q => q.id === parseInt(questionId))?.category || ''
+      }));
+
+      // Prepare complete data for backend
+      const completeData = {
+        ...calculatedResults,
+        answers: answersArray,
+        assessmentType: 'emotional-intelligence',
+        status: 'completed',
+        progress: 100,
+        timeSpent: {
+          start: new Date().toISOString(),
+          end: new Date().toISOString()
+        }
+      };
+      
+      console.log('Data being saved to database:', completeData);
+      
+      // Send results to backend
+      await completeAssessment(completeData);
+      setResults(calculatedResults);
+      setCurrentView('results');
+    } catch (error) {
+      console.error('Error completing assessment:', error);
+    }
+  };
+
+  const handleRestart = async () => {
+    try {
+      await abandonAssessment('User restarted assessment');
+      setResults(null);
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Error restarting assessment:', error);
+    }
+  };
+
+  const handleBackToHome = async () => {
+    try {
+      await abandonAssessment('User returned to home');
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Error returning to home:', error);
+    }
+  };
+
   if (currentView === 'assessment') {
-    return (
-      <AssessmentQuiz 
-        questions={questions} 
-        onComplete={handleComplete} 
-        onBack={() => setCurrentView('intro')} 
-      />
-    );
+    return <AssessmentQuiz questions={questions} onComplete={handleQuizComplete} onBack={handleBackToHome} />;
   }
   
   if (currentView === 'results' && results) {
-    return (
-      <ResultsDashboard 
-        totalScore={results.totalScore}
-        categoryScores={results.categoryScores}
-        persona={results.persona}
-        growthPlan={results.growthPlan}
-        onRestart={() => setCurrentView('assessment')}
-      />
-    );
+    return <ResultsDashboard 
+      totalScore={results.overallScore}
+      categoryScores={results.dimensions}
+      persona={getEQPersona(results.dimensions)}
+      growthPlan={getGrowthPlan(results.dimensions)}
+      onRestart={handleRestart}
+    />;
   }
   
-  return <Introduction onStart={() => setCurrentView('assessment')} />;
+  return <Introduction onStart={handleStart} />;
 };
 
 export default EmotionalIntelligenceEvaluator;

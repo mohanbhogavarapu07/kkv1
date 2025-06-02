@@ -97,7 +97,7 @@ const sendContactFormEmail = async (contactDetails) => {
   }
 };
 
-export const sendAssessmentResultsEmail = async ({ to, name, assessmentType, results }) => {
+export const sendAssessmentResultsEmail = async ({ to, name, assessmentType, results, pdfBase64 }) => {
   try {
     const assessmentNames = {
       'entrepreneurial-potential': 'Entrepreneurial Potential Assessment',
@@ -112,24 +112,28 @@ export const sendAssessmentResultsEmail = async ({ to, name, assessmentType, res
     const assessmentName = assessmentNames[assessmentType] || assessmentType;
 
     const emailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Your ${assessmentName} Results</h2>
-        <p>Dear ${name},</p>
-        <p>Thank you for completing the ${assessmentName}. Here are your results:</p>
-        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-          ${results}
-        </div>
-        <p>If you have any questions about your results, please don't hesitate to reach out.</p>
-        <p>Best regards,<br>Your Assessment Team</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <p style="color: #444; line-height: 1.6;">Dear ${name},</p>
+        <p style="color: #444; line-height: 1.6;">Please find your ${assessmentName} results attached to this email.</p>
+        <p style="color: #444; line-height: 1.6;">Best regards,<br>Your Assessment Team</p>
       </div>
     `;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    const mailOptions = {
+      from: {
+        name: 'Krishna Kumar',
+        address: process.env.EMAIL_USER
+      },
       to,
       subject: `Your ${assessmentName} Results`,
-      html: emailContent
-    });
+      html: emailContent,
+      attachments: [{
+        filename: `${assessmentType}-results.pdf`,
+        content: Buffer.from(pdfBase64, 'base64')
+      }]
+    };
+
+    await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
     console.error('Error sending assessment results email:', error);

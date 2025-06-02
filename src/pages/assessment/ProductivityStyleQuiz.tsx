@@ -8,6 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import jsPDF from 'jspdf';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import { sendAssessmentResults } from '@/services/emailService';
+import { toast } from 'sonner';
 
 // Utility to merge class names
 function cn(...inputs: ClassValue[]) {
@@ -213,18 +216,27 @@ const QuizSection = ({ onComplete, onBack }: QuizSectionProps) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const { updateProgress } = useAssessment();
 
   const handleAnswerSelect = (value: number) => setSelectedAnswer(value);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (selectedAnswer !== null) {
-      setAnswers(prev => ({ ...prev, [questions[currentQuestion].id]: selectedAnswer }));
+      const newAnswers = { ...answers, [questions[currentQuestion].id]: selectedAnswer };
+      setAnswers(newAnswers);
+      
+      // Update progress in backend
+      await updateProgress(
+        questions[currentQuestion].id,
+        selectedAnswer,
+        currentQuestion + 1
+      );
+
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(prev => prev + 1);
         setSelectedAnswer(null);
       } else {
-        const finalAnswers = { ...answers, [questions[currentQuestion].id]: selectedAnswer };
-        onComplete(finalAnswers);
+        onComplete(newAnswers);
       }
     }
   };
@@ -410,13 +422,76 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
     setEmailError("");
   };
 
-  const handleEmailSend = () => {
+  const handleEmailSend = async () => {
     if (!email.match(/^\S+@\S+\.\S+$/)) {
       setEmailError("Please enter a valid email address.");
       return;
     }
-    setShowEmailModal(false);
-    // TODO: Implement actual send logic here
+
+    try {
+      // Generate PDF content
+      const doc = new jsPDF();
+      // Main Heading
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Productivity Style Assessment', 105, 20, { align: 'center' });
+      // Subheading
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Summary', 14, 35);
+      // Body
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Your Style: ${results.type}`, 14, 45);
+      doc.text(`Chronotype: ${results.chronotype}`, 14, 53);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`"${results.description}"`, 14, 61, { maxWidth: 180 });
+      // Section Heading
+      doc.setFont('helvetica', 'bold');
+      doc.text('Style Breakdown:', 14, 75);
+      doc.setFont('helvetica', 'normal');
+      let y = 83;
+      Object.entries(results.score).forEach(([style, score]) => {
+        doc.text(`- ${style}: ${score}%`, 18, y);
+        y += 8;
+      });
+      // Strengths
+      doc.setFont('helvetica', 'bold');
+      doc.text('Key Strengths:', 14, y + 4); y += 12;
+      doc.setFont('helvetica', 'normal');
+      results.strengths.forEach((s: string, i: number) => {
+        doc.text(`- ${s}`, 18, y + i * 8);
+      });
+      y = y + results.strengths.length * 8 + 8;
+      // Time Blocking
+      doc.setFont('helvetica', 'bold');
+      doc.text('Time Blocking Tips:', 14, y); y += 8;
+      doc.setFont('helvetica', 'normal');
+      results.timeBlocking.forEach((t: string, i: number) => {
+        doc.text(`- ${t}`, 18, y + i * 8);
+      });
+      y = y + results.timeBlocking.length * 8 + 8;
+      // Recommended Tools
+      doc.setFont('helvetica', 'bold');
+      doc.text('Recommended Tools:', 14, y); y += 8;
+      doc.setFont('helvetica', 'normal');
+      results.tools.forEach((t: string, i: number) => {
+        doc.text(`- ${t}`, 18, y + i * 8);
+      });
+
+      await sendAssessmentResults({
+        email,
+        assessmentType: 'productivity-style',
+        results,
+        pdfContent: doc
+      });
+
+      setShowEmailModal(false);
+      toast.success('Results sent to your email successfully!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error('Failed to send email. Please try again.');
+    }
   };
 
   return (
@@ -598,43 +673,94 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
 const ProductivityStyleQuiz = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results'>('landing');
   const [results, setResults] = useState<any>(null);
+  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
 
-  const handleStart = () => setCurrentView('assessment');
+  const handleStart = async () => {
+    try {
+      await startAssessment('productivity-style');
+      setCurrentView('assessment');
+    } catch (error) {
+      console.error('Error starting assessment:', error);
+      // Handle error appropriately
+    }
+  };
   
-  const handleQuizComplete = (quizAnswers: Record<string, number>) => {
-    // Calculate results based on answers
-    const calculatedResults = {
-      type: "Strategic Planner",
-      chronotype: "Early Bird",
-      description: "You excel at planning and executing tasks in a structured manner.",
-      timeBlocking: ["Morning deep work", "Afternoon meetings", "Evening review"],
-      tools: ["Notion", "Todoist", "Forest"],
-      habits: ["Morning planning", "Daily review", "Weekly reflection"],
-      strengths: ["Organization", "Planning", "Focus"],
-      challenges: ["Flexibility", "Spontaneity"],
-      compatibility: {
-        works_well_with: ["Executors", "Analysts"],
-        challenges_with: ["Spontaneous Creatives"]
-      },
-      score: {
-        cognitive: 85,
-        workStyle: 90,
-        energy: 75,
-        focus: 88,
-        toolUsage: 82
-      }
-    };
-    
-    setResults(calculatedResults);
-    setCurrentView('results');
+  const handleQuizComplete = async (quizAnswers: Record<string, number>) => {
+    try {
+      // Calculate results based on answers
+      const calculatedResults = {
+        type: "Strategic Planner",
+        chronotype: "Early Bird",
+        description: "You excel at planning and executing tasks in a structured manner.",
+        timeBlocking: ["Morning deep work", "Afternoon meetings", "Evening review"],
+        tools: ["Notion", "Todoist", "Forest"],
+        habits: ["Morning planning", "Daily review", "Weekly reflection"],
+        strengths: ["Organization", "Planning", "Focus"],
+        challenges: ["Flexibility", "Spontaneity"],
+        compatibility: {
+          works_well_with: ["Executors", "Analysts"],
+          challenges_with: ["Spontaneous Creatives"]
+        },
+        score: {
+          cognitive: 85,
+          workStyle: 90,
+          energy: 75,
+          focus: 88,
+          toolUsage: 82
+        }
+      };
+      
+      // Convert quizAnswers to array format for database
+      const answersArray = Object.entries(quizAnswers).map(([questionId, answer]) => ({
+        questionId: parseInt(questionId),
+        answer: answer,
+        dimension: questions.find(q => q.id === parseInt(questionId))?.category || ''
+      }));
+
+      // Prepare complete data for backend
+      const completeData = {
+        ...calculatedResults,
+        answers: answersArray,
+        assessmentType: 'productivity-style',
+        status: 'completed',
+        progress: 100,
+        timeSpent: {
+          start: new Date().toISOString(),
+          end: new Date().toISOString()
+        }
+      };
+      
+      console.log('Data being saved to database:', completeData);
+      
+      // Send results to backend
+      await completeAssessment(completeData);
+      setResults(calculatedResults);
+      setCurrentView('results');
+    } catch (error) {
+      console.error('Error completing assessment:', error);
+    }
   };
 
-  const handleRestart = () => {
-    setResults(null);
-    setCurrentView('landing');
+  const handleRestart = async () => {
+    try {
+      await abandonAssessment('User restarted assessment');
+      setResults(null);
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Error restarting assessment:', error);
+      // Handle error appropriately
+    }
   };
 
-  const handleBackToHome = () => setCurrentView('landing');
+  const handleBackToHome = async () => {
+    try {
+      await abandonAssessment('User returned to home');
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Error returning to home:', error);
+      // Handle error appropriately
+    }
+  };
 
   if (currentView === 'assessment') {
     return <QuizSection onComplete={handleQuizComplete} onBack={handleBackToHome} />;

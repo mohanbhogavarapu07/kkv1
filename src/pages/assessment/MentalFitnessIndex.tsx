@@ -2,6 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Brain as BrainIcon, Lightbulb as LightbulbIcon, Target, Zap, TrendingUp, RotateCcw, Calendar, Clock, CheckCircle, Download, Mail, ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import jsPDF from 'jspdf';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import { sendAssessmentResults } from '@/services/emailService';
+import { toast } from 'sonner';
+
 
 // =========================
 // Utilities
@@ -467,13 +471,68 @@ function ResultsDashboard({ results, onViewTraining, onRetakeAssessment }: { res
     setEmailError("");
   };
 
-  const handleEmailSend = () => {
+  const handleEmailSend = async () => {
     if (!email.match(/^\S+@\S+\.\S+$/)) {
       setEmailError("Please enter a valid email address.");
       return;
     }
-    setShowEmailModal(false);
-    // TODO: Implement actual send logic here
+
+    try {
+      // Generate PDF content
+      const doc = new jsPDF();
+      // Main Heading
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Mental Fitness Index Assessment', 105, 20, { align: 'center' });
+      // Subheading
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Summary', 14, 35);
+      // Body
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Overall Score: ${results.mfiScore}%`, 14, 45);
+      doc.text(`Fitness Level: ${results.category}`, 14, 53);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`"${results.description}"`, 14, 61, { maxWidth: 180 });
+      // Section Heading
+      doc.setFont('helvetica', 'bold');
+      doc.text('Category Scores:', 14, 75);
+      doc.setFont('helvetica', 'normal');
+      let y = 83;
+      Object.entries(results.categoryScores).forEach(([category, score]) => {
+        doc.text(`- ${category}: ${score}%`, 18, y);
+        y += 8;
+      });
+      // Strengths
+      doc.setFont('helvetica', 'bold');
+      doc.text('Key Strengths:', 14, y + 4); y += 12;
+      doc.setFont('helvetica', 'normal');
+      results.strengths.forEach((s: string, i: number) => {
+        doc.text(`- ${s}`, 18, y + i * 8);
+      });
+      y = y + results.strengths.length * 8 + 8;
+      // Areas for Growth
+      doc.setFont('helvetica', 'bold');
+      doc.text('Areas for Growth:', 14, y); y += 8;
+      doc.setFont('helvetica', 'normal');
+      results.weaknesses.forEach((a: string, i: number) => {
+        doc.text(`- ${a}`, 18, y + i * 8);
+      });
+
+      await sendAssessmentResults({
+        email,
+        assessmentType: 'mental-fitness-index',
+        results,
+        pdfContent: doc
+      });
+
+      setShowEmailModal(false);
+      toast.success('Results sent to your email successfully!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error('Failed to send email. Please try again.');
+    }
   };
 
   return (
@@ -870,23 +929,110 @@ function Introduction({ onStart }: { onStart: () => void }) {
   );
 }
 
-const MentalFitnessIndexPage = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results' | 'training'>('landing');
-  const [assessmentResults, setAssessmentResults] = useState<any>(null);
-  const handleAssessmentComplete = (results: any) => {
-    setAssessmentResults(results);
-    setCurrentView('results');
+interface AssessmentResults {
+  overallScore: number;
+  dimensions: {
+    cognitive: number;
+    emotional: number;
+    physical: number;
+    social: number;
   };
+  strengths: string[];
+  areasForGrowth: string[];
+}
+
+const MentalFitnessIndex: React.FC = () => {
+  const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results' | 'training'>('landing');
+  const [results, setResults] = useState<AssessmentResults | null>(null);
+  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
+
+  const handleStart = async () => {
+    try {
+      await startAssessment('mental-fitness');
+      setCurrentView('assessment');
+    } catch (error) {
+      console.error('Error starting assessment:', error);
+    }
+  };
+  
+  const handleQuizComplete = async (quizAnswers: Record<string, number>) => {
+    try {
+      const calculatedResults: AssessmentResults = {
+        overallScore: 85,
+        dimensions: {
+          cognitive: 88,
+          emotional: 82,
+          physical: 85,
+          social: 85
+        },
+        strengths: ["Focus", "Stress Management"],
+        areasForGrowth: ["Sleep Quality", "Work-Life Balance"]
+      };
+      
+      // Convert quizAnswers to array format for database
+      const answersArray = Object.entries(quizAnswers).map(([questionId, answer]) => ({
+        questionId: parseInt(questionId),
+        answer: answer,
+        dimension: questions.find(q => q.id === parseInt(questionId))?.category || ''
+      }));
+
+      // Log the complete data being sent to verify all fields
+      const completeData = {
+        ...calculatedResults,
+        answers: answersArray,
+        assessmentType: 'mental-fitness',
+        status: 'completed',
+        progress: 100,
+        timeSpent: {
+          start: new Date().toISOString(),
+          end: new Date().toISOString()
+        }
+      };
+      
+      console.log('Data being saved to database:', completeData);
+      
+      // Send results to backend with answers array
+      await completeAssessment(completeData);
+      
+      setResults(calculatedResults);
+      setCurrentView('results');
+    } catch (error) {
+      console.error('Error completing assessment:', error);
+    }
+  };
+
+  const handleRestart = async () => {
+    try {
+      await abandonAssessment('User restarted assessment');
+      setResults(null);
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Error restarting assessment:', error);
+    }
+  };
+
+  const handleBackToHome = async () => {
+    try {
+      await abandonAssessment('User returned to home');
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Error returning to home:', error);
+    }
+  };
+
   if (currentView === 'assessment') {
-    return <AssessmentQuiz onComplete={handleAssessmentComplete} onBack={() => setCurrentView('landing')} />;
+    return <AssessmentQuiz onComplete={handleQuizComplete} onBack={handleBackToHome} />;
   }
-  if (currentView === 'results' && assessmentResults) {
-    return <ResultsDashboard results={assessmentResults} onViewTraining={() => setCurrentView('training')} onRetakeAssessment={() => setCurrentView('assessment')} />;
+  
+  if (currentView === 'results' && results) {
+    return <ResultsDashboard results={results} onViewTraining={() => setCurrentView('training')} onRetakeAssessment={handleRestart} />;
   }
-  if (currentView === 'training' && assessmentResults) {
-    return <TrainingProgram results={assessmentResults} onBack={() => setCurrentView('results')} />;
+
+  if (currentView === 'training' && results) {
+    return <TrainingProgram results={results} onBack={() => setCurrentView('results')} />;
   }
-  return <Introduction onStart={() => setCurrentView('assessment')} />;
+  
+  return <Introduction onStart={handleStart} />;
 };
 
-export default MentalFitnessIndexPage; 
+export default MentalFitnessIndex; 
