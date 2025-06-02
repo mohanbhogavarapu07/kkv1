@@ -23,6 +23,8 @@ import BurnoutRiskAssessment from './pages/assessment/BurnoutRiskAssessment';
 import ProductivityStyleQuiz from './pages/assessment/ProductivityStyleQuiz';
 import LeadershipAssessment from './pages/assessment/LeadershipAssessment';
 import AdminInsights from './pages/admin/Insights';
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,8 @@ const App = () => (
               <Route path="/assessment/productivity-style-quiz" element={<ProductivityStyleQuiz />} />
               <Route path="/assessment/leadership" element={<LeadershipAssessment />} />
               <Route path="/admin/insights" element={<AdminInsights />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
