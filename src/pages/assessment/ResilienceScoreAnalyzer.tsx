@@ -17,6 +17,7 @@ import {
   Mail
 } from "lucide-react";
 import jsPDF from 'jspdf';
+import BaseAssessment from '@/components/BaseAssessment';
 
 // =====================================
 // 🧾 TYPES & LOGIC
@@ -1078,7 +1079,7 @@ const ResilienceScoreAnalyzer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {step === "intro" && (
+      {step === "hero" && (
         <HeroSection onStartQuiz={() => setStep("quiz")} />
       )}
       {step === "quiz" && (
@@ -1087,7 +1088,7 @@ const ResilienceScoreAnalyzer = () => {
             setResults(res);
             setStep("results");
           }}
-          onBack={() => setStep("intro")}
+          onBack={() => setStep("hero")}
         />
       )}
       {step === "results" && results && (
