@@ -988,7 +988,12 @@ const IndexPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             </div>
           </CardContent>
           <div className="flex justify-center pb-8">
-            <Button onClick={onStart} className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105" style={{ fontSize: '1.125rem' }}>Begin Assessment</Button>
+            <button
+              onClick={onStart}
+              className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105 text-lg"
+            >
+              Begin Assessment
+            </button>
           </div>
         </Card>
       </div>

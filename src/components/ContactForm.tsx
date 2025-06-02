@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { sendContactMessage } from '@/lib/api';
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -30,30 +30,21 @@ const ContactForm = () => {
     setStatus({ type: 'loading', message: 'Sending message...' });
 
     try {
-      const response = await fetch('http://localhost:3000/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          subject: formData.subject.trim(),
-          message: formData.message.trim()
-        })
+      await sendContactMessage({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim()
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus({ type: 'success', message: 'Message sent successfully!' });
-        setFormData({ name: '', email: '', subject: '', message: '' }); // Clear form
-      } else {
-        setStatus({ type: 'error', message: data.error || 'Failed to send message' });
-      }
+      setStatus({ type: 'success', message: 'Message sent successfully!' });
+      setFormData({ name: '', email: '', subject: '', message: '' }); // Clear form
     } catch (error) {
       console.error('Error:', error);
-      setStatus({ type: 'error', message: 'Failed to send message. Please try again.' });
+      setStatus({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Failed to send message. Please try again.' 
+      });
     }
   };
 

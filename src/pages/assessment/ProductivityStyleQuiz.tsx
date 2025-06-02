@@ -193,13 +193,13 @@ const IntroSection = ({ onStart }: { onStart: () => void }) => (
             <li>Team compatibility insights</li>
           </ul>
         </div>
-        <div className="flex justify-center">
-          <Button 
+        <div className="text-center">
+          <button
             onClick={onStart}
-            className="bg-black text-white hover:bg-gray-800 px-8 py-3 text-lg"
+            className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105 text-lg"
           >
             Begin Assessment
-          </Button>
+          </button>
         </div>
       </CardContent>
     </Card>

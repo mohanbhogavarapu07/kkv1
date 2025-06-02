@@ -22,6 +22,7 @@ import ResilienceScoreAnalyzer from './pages/assessment/ResilienceScoreAnalyzer'
 import BurnoutRiskAssessment from './pages/assessment/BurnoutRiskAssessment';
 import ProductivityStyleQuiz from './pages/assessment/ProductivityStyleQuiz';
 import LeadershipAssessment from './pages/assessment/LeadershipAssessment';
+import AdminInsights from './pages/admin/Insights';
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/assessment/burnoutriskassessment" element={<BurnoutRiskAssessment />} />
               <Route path="/assessment/productivity-style-quiz" element={<ProductivityStyleQuiz />} />
               <Route path="/assessment/leadership" element={<LeadershipAssessment />} />
+              <Route path="/admin/insights" element={<AdminInsights />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

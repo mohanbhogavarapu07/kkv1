@@ -1,6 +1,5 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 
 interface BlogPostProps {
   title: string;
@@ -13,12 +12,11 @@ const BlogPost: React.FC<BlogPostProps> = ({ title, excerpt, date, slug }) => {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate(-1); // This will navigate back to the previous page
+    navigate(-1);
   };
 
   return (
     <article className="mb-12 pb-12 border-b border-gray-200">
-      {/* Removed back button here */}
       <span className="text-xs text-gray-500 uppercase tracking-wider">{date}</span>
       <h2 className="text-2xl md:text-3xl font-playfair mt-2 mb-3">
         <Link to={`/insights/${slug}`} className="hover:text-gray-700 transition-colors">

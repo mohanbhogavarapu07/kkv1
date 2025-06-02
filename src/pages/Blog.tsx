@@ -1,39 +1,69 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import BlogPost from "@/components/BlogPost";
+import NewsletterSubscription from "@/components/NewsletterSubscription";
+import { format } from "date-fns";
+
+interface Post {
+  title: string;
+  excerpt: string;
+  date: string;
+  slug: string;
+}
 
 const Blog = () => {
-  const posts = [
-    {
-      title: "Strategic Rest: Why High-Achievers Need to Master Recovery",
-      excerpt: "The counterintuitive approach to productivity that leverages rest as a strategic advantage rather than a necessary evil. Learn the science behind cognitive recovery and practical frameworks for implementing strategic rest cycles.",
-      date: "April 24, 2025",
-      slug: "strategic-rest"
-    },
-    {
-      title: "Decision Frameworks for Overwhelming Complexity",
-      excerpt: "How to make clear, confident decisions when facing ambiguity, competing priorities, and information overload. A practical guide to decision frameworks that reduce cognitive burden and improve outcome quality.",
-      date: "April 12, 2025",
-      slug: "decision-frameworks"
-    },
-    {
-      title: "The Integration Principle: Aligning Professional Excellence and Personal Wellbeing",
-      excerpt: "Moving beyond work-life balance to a more sophisticated approach: strategic integration. How top performers design systems that allow simultaneous achievement across multiple life domains.",
-      date: "March 28, 2025",
-      slug: "integration-principle"
-    },
-    {
-      title: "Project Turnaround: The Mental Models That Rescue Failing Initiatives",
-      excerpt: "A comprehensive framework for diagnosing, stabilizing, and recovering troubled projects. Practical approaches based on experience with dozens of complex project rescues across industries.",
-      date: "March 15, 2025",
-      slug: "project-turnaround"
-    },
-    {
-      title: "The Efficiency Paradox: When Optimization Creates Underperformance",
-      excerpt: "Why relentless efficiency can actually damage long-term performance. How to identify when optimization becomes counterproductive and what to do instead to sustain meaningful productivity.",
-      date: "February 27, 2025",
-      slug: "efficiency-paradox"
-    }
-  ];
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('/api/blog/posts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch posts');
+        }
+        const data = await response.json();
+        // Format dates and ensure all required fields are present
+        const formattedPosts = data.map((post: any) => ({
+          title: post.title,
+          excerpt: post.excerpt,
+          date: format(new Date(post.date), 'MMMM d, yyyy'),
+          slug: post.slug
+        }));
+        setPosts(formattedPosts);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="section">
+        <div className="container">
+          <div className="max-w-3xl mx-auto">
+            <p>Loading posts...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="section">
+        <div className="container">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-red-600">Error: {error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -84,16 +114,7 @@ const Blog = () => {
                 </ul>
                 
                 <div className="mt-12">
-                  <h3 className="text-lg font-playfair mb-6">Subscribe to Newsletter</h3>
-                  <p className="text-sm text-gray-700 mb-4">Receive new insights and practical frameworks directly to your inbox.</p>
-                  <input 
-                    type="email" 
-                    placeholder="Your email address" 
-                    className="w-full border border-gray-300 p-2 mb-2 focus:outline-none focus:border-black"
-                  />
-                  <button className="w-full border border-black bg-black text-white p-2 hover:bg-white hover:text-black transition-colors">
-                    Subscribe
-                  </button>
+                  <NewsletterSubscription />
                 </div>
               </div>
             </div>

@@ -16,6 +16,7 @@ import {
   Download,
   Mail
 } from "lucide-react";
+import BaseAssessment from '../../components/BaseAssessment';
 
 // =====================================
 // 🧾 TYPES & LOGIC
@@ -297,94 +298,86 @@ function TabsContent({ value: contentValue, value: currentValue, children, class
 // =====================================
 function HeroSection({ onStartQuiz }: { onStartQuiz: () => void }) {
   return (
-    <div className="homepage-bg min-h-screen bg-gray-50">
-      <div className="container max-w-4xl mx-auto px-4 py-8 animate-fade-in">
-        <Card className="border-none shadow-lg bg-white">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl sm:text-4xl font-bold text-black">
+    <BaseAssessment assessmentType="resilience-score">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-black mb-4">
               Resilience Blueprint Index
-            </CardTitle>
-            <CardDescription className="text-lg mt-2 text-black">
+          </h1>
+          <p className="text-lg text-gray-700 mb-6">
               Discover your resilience, grit, and recovery potential
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <h2 className="text-xl font-semibold text-black mb-3">What is Resilience?</h2>
-              <p className="text-black mb-4">
-                Resilience is your ability to bounce back from setbacks, adapt to change, and keep going in the face of adversity. This assessment measures your resilience strengths and growth opportunities.
-              </p>
-              <p className="text-black">
-                Use this tool to understand your resilience profile and discover actionable strategies for personal growth.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm flex items-start space-x-3 border border-gray-200">
-                <div className="bg-gray-100 p-2 rounded-full">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gray-100 rounded-full">
                   <Brain className="h-6 w-6 text-black" />
                 </div>
-                <div>
-                  <h3 className="font-medium text-black">Self-Discovery</h3>
-                  <p className="text-sm text-gray-600">
-                    Gain insights into your resilience strengths and adaptability
+              <h3 className="text-lg font-semibold text-black">What is Resilience?</h3>
+            </div>
+            <p className="text-gray-700">
+              Resilience is your ability to bounce back from setbacks, adapt to change, and keep going in the face of adversity. This assessment measures your resilience strengths and growth opportunities.
                   </p>
                 </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm flex items-start space-x-3 border border-gray-200">
-                <div className="bg-gray-100 p-2 rounded-full">
+
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gray-100 rounded-full">
                   <Lightbulb className="h-6 w-6 text-black" />
                 </div>
-                <div>
-                  <h3 className="font-medium text-black">Growth Focus</h3>
-                  <p className="text-sm text-gray-600">
-                    Identify ways to enhance your resilience
-                  </p>
+              <h3 className="text-lg font-semibold text-black">What You'll Learn</h3>
                 </div>
+            <ul className="space-y-2 text-gray-700">
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-black" />
+                Your resilience score and profile
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-black" />
+                Areas of strength and growth
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-black" />
+                Personalized recommendations
+              </li>
+            </ul>
               </div>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <h2 className="text-xl font-semibold text-black mb-3">
-                About This Assessment
-              </h2>
-              <ul className="space-y-2 text-black">
-                <li className="flex items-center">
-                  <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-                  <span>
+
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-8">
+          <h3 className="text-lg font-semibold text-black mb-4">About This Assessment</h3>
+          <ul className="space-y-2 text-gray-700">
+            <li className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-black" />
                     Takes approximately 5-7 minutes to complete
-                  </span>
                 </li>
-                <li className="flex items-center">
-                  <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-                  <span>
+            <li className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-black" />
                     Includes 20 questions across 4 resilience dimensions
-                  </span>
                 </li>
-                <li className="flex items-center">
-                  <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-                  <span>
+            <li className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-black" />
                     Provides detailed feedback and personalized recommendations
-                  </span>
                 </li>
-                <li className="flex items-center">
-                  <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-                  <span>
+            <li className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-black" />
                     Your responses are completely private and confidential
-                  </span>
                 </li>
               </ul>
             </div>
-          </CardContent>
-          <div className="flex justify-center pb-8">
-            <Button
+
+        <div className="text-center">
+          <button
               onClick={onStartQuiz}
               className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105 text-lg"
             >
               Begin Assessment
-            </Button>
+          </button>
           </div>
-        </Card>
       </div>
-    </div>
+    </BaseAssessment>
   );
 }
 
@@ -534,9 +527,11 @@ function ResilienceQuiz({ onComplete }: { onComplete: (results: ResilienceResult
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const progress = ((currentQuestion + 1) / questions.length) * 100;
+
   const handleAnswer = (questionId: number, value: number) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
+
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
@@ -545,17 +540,19 @@ function ResilienceQuiz({ onComplete }: { onComplete: (results: ResilienceResult
       onComplete(results);
     }
   };
+
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion((prev) => prev - 1);
     }
   };
+
   const currentQ = questions[currentQuestion];
   const currentAnswer = answers[currentQ.id];
 
   return (
-    <div className="min-h-screen bg-white text-black">
-      <div className="container mx-auto px-6 py-8 max-w-4xl">
+    <BaseAssessment assessmentType="resilience-score">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Brain className="w-6 h-6 text-black" />
@@ -567,16 +564,22 @@ function ResilienceQuiz({ onComplete }: { onComplete: (results: ResilienceResult
             Question {currentQuestion + 1} of {questions.length}
           </span>
         </div>
+
         <div className="mb-8">
           <div className="flex justify-between items-center mb-3">
             <span className="text-sm font-medium text-black">
               {Math.round(progress)}% Complete
             </span>
           </div>
-          <Progress value={progress} />
+          <div className="h-2 w-full bg-gray-200 rounded-full">
+            <div
+              className="h-full bg-black transition-all"
+              style={{ width: `${progress}%` }}
+            />
         </div>
-        <Card className="bg-white border-2 border-gray-200 mb-8 text-black">
-          <CardHeader>
+        </div>
+
+        <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="px-3 py-1 bg-gray-100 rounded-full">
                 <span className="text-black text-sm font-medium">
@@ -584,65 +587,52 @@ function ResilienceQuiz({ onComplete }: { onComplete: (results: ResilienceResult
                 </span>
               </div>
             </div>
-            <CardTitle className="text-2xl font-semibold text-black leading-relaxed">
+          <h2 className="text-xl font-semibold text-black mb-6">
               {currentQ.text}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {scaleLabels.map((label, idx) => (
-                <label
-                  key={idx}
-                  className={`w-full p-4 rounded-lg border-2 text-left flex items-center justify-between cursor-pointer ${
-                    currentAnswer === idx + 1
-                      ? "border-black bg-gray-100"
-                      : "border-gray-200 bg-white"
-                  }`}
-                >
-                  <span className="font-medium text-black">{label}</span>
-                  <input
-                    type="radio"
-                    name={`q${currentQ.id}`}
-                    value={idx + 1}
-                    checked={currentAnswer === idx + 1}
-                    onChange={() => handleAnswer(currentQ.id, idx + 1)}
-                    className="form-radio h-4 w-4 text-black border-gray-300 focus:ring-black"
-                  />
-                </label>
+          </h2>
+          <div className="space-y-4">
+            {scaleLabels.map((label, index) => (
+              <button
+                key={index}
+                onClick={() => handleAnswer(currentQ.id, index + 1)}
+                className={`w-full p-4 text-left rounded-lg transition-colors ${
+                  currentAnswer === index + 1
+                    ? "bg-black text-white"
+                    : "bg-gray-50 hover:bg-gray-100 text-black"
+                }`}
+              >
+                {label}
+              </button>
               ))}
             </div>
-          </CardContent>
-        </Card>
-        <div className="flex justify-between">
-          <Button
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <button
             onClick={handlePrevious}
             disabled={currentQuestion === 0}
-            className="border-2 border-black text-black bg-gray-100 disabled:bg-gray-50 disabled:text-gray-300 disabled:border-gray-300 inline-flex items-center px-6 py-3 font-medium shadow-sm"
+            className="px-6 py-3 border-2 border-black text-black bg-gray-100 disabled:bg-gray-50 disabled:text-gray-300 disabled:border-gray-300 rounded-lg inline-flex items-center"
           >
             <ChevronLeft className="w-4 h-4 mr-2" />
-            <span className="font-medium">Previous</span>
-          </Button>
-          <Button
+            Previous
+          </button>
+          <button
             onClick={handleNext}
             disabled={currentAnswer == null}
-            className="bg-black text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3 font-medium shadow-sm"
+            className="px-6 py-3 bg-black text-white disabled:bg-gray-300 rounded-lg inline-flex items-center"
           >
-            <span className="font-medium">
-              {currentQuestion === questions.length - 1
-                ? "Complete Assessment"
-                : "Next Question"}
-            </span>
+            {currentQuestion === questions.length - 1 ? "Complete Assessment" : "Next Question"}
             <ChevronRight className="w-4 h-4 ml-2" />
-          </Button>
+          </button>
         </div>
       </div>
-    </div>
+    </BaseAssessment>
   );
 }
 
-// ===============================
-// RESULTS COMPONENT
-// ===============================
+// =====================================
+// 📊 RESULTS SECTION
+// =====================================
 function ResilienceResults({
   results,
   onRetakeQuiz,
@@ -650,47 +640,19 @@ function ResilienceResults({
   results: ResilienceResults;
   onRetakeQuiz: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState("scores");
-
-  const getScoreColor = (score: number) => {
-    if (score >= 20) return 'text-green-400';
-    if (score >= 15) return 'text-yellow-400';
-    return 'text-red-400';
-  };
-
-  const getBurnoutRiskColor = (risk: string) => {
-    switch (risk) {
-      case 'Low': return 'bg-green-500';
-      case 'Moderate': return 'bg-yellow-500';
-      case 'High': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'Grit-Rich Powerhouse': return 'from-purple-500 to-pink-500';
-      case 'Tough-Minded Achiever': return 'from-blue-500 to-cyan-500';
-      case 'Adaptive': return 'from-green-500 to-emerald-500';
-      default: return 'from-gray-500 to-slate-500';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-white text-black">
-      <div className="container mx-auto px-6 py-8 max-w-6xl">
-        {/* Back Button */}
+    <BaseAssessment assessmentType="resilience-score">
+      <div className="container max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <Button 
+          <button 
             onClick={() => window.history.back()} 
-            className="px-6 py-3 text-base bg-gray-100 text-black border-2 border-black inline-flex items-center justify-center font-medium shadow-sm"
+            className="px-6 py-3 text-base bg-gray-100 text-black border-2 border-black rounded-lg inline-flex items-center"
           >
             <ChevronLeft className="w-5 h-5 mr-2" />
-            <span className="font-medium">Back to Assessments</span>
-          </Button>
+            Back to Assessments
+          </button>
         </div>
 
-        {/* Header with total score */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Star className="h-4 w-4" />
@@ -706,122 +668,45 @@ function ResilienceResults({
             Your Resilience Archetype: <span className="text-black font-semibold">{results.archetype}</span>
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Badge className="bg-black text-white px-3 py-1 cursor-default select-none">
+            <span className={`px-3 py-1 rounded-full text-white ${
+              results.burnoutRisk === 'Low' ? 'bg-green-500' :
+              results.burnoutRisk === 'Moderate' ? 'bg-yellow-500' :
+              'bg-red-500'
+            }`}>
               Burnout Risk: {results.burnoutRisk}
-            </Badge>
+            </span>
           </div>
         </div>
 
-        {/* Tabs Navigation */}
-        <div className="mb-8">
-          <div className="grid grid-cols-4 gap-2 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab("scores")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "scores"
-                  ? "bg-black text-white shadow-sm"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Dimension Scores
-            </button>
-            <button
-              onClick={() => setActiveTab("rolemodel")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "rolemodel"
-                  ? "bg-black text-white shadow-sm"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Role Model Match
-            </button>
-            <button
-              onClick={() => setActiveTab("plan7")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "plan7"
-                  ? "bg-black text-white shadow-sm"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              7-Day Reset
-            </button>
-            <button
-              onClick={() => setActiveTab("plan30")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "plan30"
-                  ? "bg-black text-white shadow-sm"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              30-Day Builder
-            </button>
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        <div className="mt-6">
-          {activeTab === "scores" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Dimension Scores */}
-              <Card className="bg-white border border-gray-200 p-6">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="text-xl font-semibold text-black mb-6 flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-black" />
                   Resilience Dimensions
                 </h3>
                 <div className="space-y-6">
-                  <div>
+              {Object.entries(results.subscores).map(([dimension, score]) => (
+                <div key={dimension}>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-700 flex items-center gap-2">
-                        <Brain className="h-4 w-4" />
-                        Emotional Endurance
+                    <span className="text-gray-700 capitalize">
+                      {dimension.replace(/([A-Z])/g, ' $1').trim()}
                       </span>
                       <span className="font-semibold text-black">
-                        {results.subscores.emotional}/25
+                      {score}/25
                       </span>
                     </div>
-                    <Progress value={(results.subscores.emotional / 25) * 100} className="h-2" />
+                  <div className="h-2 w-full bg-gray-200 rounded-full">
+                    <div
+                      className="h-full bg-black transition-all"
+                      style={{ width: `${(score / 25) * 100}%` }}
+                    />
                   </div>
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-700 flex items-center gap-2">
-                        <Target className="h-4 w-4" />
-                        Grit & Perseverance
-                      </span>
-                      <span className="font-semibold text-black">
-                        {results.subscores.grit}/25
-                      </span>
                     </div>
-                    <Progress value={(results.subscores.grit / 25) * 100} className="h-2" />
+              ))}
                   </div>
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-700 flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
-                        Cognitive Flexibility
-                      </span>
-                      <span className="font-semibold text-black">
-                        {results.subscores.cognitive}/25
-                      </span>
                     </div>
-                    <Progress value={(results.subscores.cognitive / 25) * 100} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-700 flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        Optimism & Recovery
-                      </span>
-                      <span className="font-semibold text-black">
-                        {results.subscores.optimism}/25
-                      </span>
-                    </div>
-                    <Progress value={(results.subscores.optimism / 25) * 100} className="h-2" />
-                  </div>
-                </div>
-              </Card>
 
-              {/* Score Interpretation */}
-              <Card className="bg-white border border-gray-200 p-6">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="text-xl font-semibold text-black mb-6 flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-black" />
                   What This Means
@@ -836,235 +721,69 @@ function ResilienceResults({
                       {results.tier === 'Fragile' && "Developing resilience - focus on building foundational coping skills and stress management."}
                     </p>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-black mb-2">Burnout Risk Assessment</h4>
-                    <div className="flex items-center gap-2 mb-2">
-                      {results.burnoutRisk === 'Low' && <CheckCircle className="h-4 w-4 text-black" />}
-                      {results.burnoutRisk === 'Moderate' && <AlertTriangle className="h-4 w-4 text-black" />}
-                      {results.burnoutRisk === 'High' && <AlertTriangle className="h-4 w-4 text-black" />}
-                      <span className="text-gray-700 text-sm">
-                        {results.burnoutRisk} Risk
-                      </span>
                     </div>
-                    <p className="text-gray-700 text-sm">
-                      {results.burnoutRisk === 'Low' && "Your emotional endurance and optimism provide good protection against burnout."}
-                      {results.burnoutRisk === 'Moderate' && "Pay attention to stress levels and practice regular self-care to prevent burnout."}
-                      {results.burnoutRisk === 'High' && "Focus on stress management and emotional recovery to reduce burnout vulnerability."}
-                    </p>
                   </div>
                 </div>
-              </Card>
-            </div>
-          )}
 
-          {activeTab === "rolemodel" && (
-            <Card className="bg-white border border-gray-200 p-8">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-10 w-10 text-black" />
-                </div>
-                <h3 className="text-2xl font-semibold text-black mb-2">
-                  Your Resilience Role Model
-                </h3>
-                <p className="text-gray-700">
-                  Based on your resilience profile, you share traits with:
-                </p>
-              </div>
-              <div className="max-w-3xl mx-auto">
-                <div className="text-center mb-8">
-                  <h4 className="text-3xl font-bold text-black mb-4">
-                    {results.roleModel.name}
-                  </h4>
-                  <p className="text-lg text-gray-700 mb-6">
-                    {results.roleModel.description}
-                  </p>
-                  <blockquote className="text-xl italic text-black bg-gray-100 p-6 rounded-lg border-l-4 border-black">
-                    "{results.roleModel.quote}"
-                  </blockquote>
-                </div>
-                <div>
-                  <h5 className="text-xl font-semibold text-black mb-4">
-                    Key Lessons You Can Apply:
-                  </h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {results.roleModel.lessons.map((lesson: string, index: number) => (
-                      <div key={index} className="flex items-start gap-3 p-4 bg-gray-100 rounded-lg">
-                        <CheckCircle className="h-5 w-5 text-black mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700">{lesson}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {activeTab === "plan7" && (
-            <Card className="bg-white border border-gray-200 p-8">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-10 w-10 text-black" />
-                </div>
-                <h3 className="text-2xl font-semibold text-black mb-2">
-                  7-Day Resilience Reset Plan
-                </h3>
-                <p className="text-gray-700">
-                  Daily micro-practices to boost your resilience immediately
-                </p>
-              </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-black mb-3">Daily Practices</h4>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Morning mindfulness (10 min)</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Energy management breaks</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Evening reflection</span>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-black mb-3">Weekly Goals</h4>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Identify stress triggers</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Practice new coping strategies</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Track progress daily</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {activeTab === "plan30" && (
-            <Card className="bg-white border border-gray-200 p-8">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="h-10 w-10 text-black" />
-                </div>
-                <h3 className="text-2xl font-semibold text-black mb-2">
-                  30-Day Resilience Builder Roadmap
-                </h3>
-                <p className="text-gray-700">
-                  Long-term capacity expansion for lasting mental toughness
-                </p>
-              </div>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <h4 className="font-semibold text-black mb-3">Week 1-2: Foundation</h4>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Establish daily routines</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Build basic habits</span>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-black mb-3">Week 3-4: Growth</h4>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Challenge comfort zones</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Develop new skills</span>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-black mb-3">Week 5-6: Mastery</h4>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Refine strategies</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-black" />
-                      <span className="text-black">Share learnings</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </Card>
-          )}
-        </div>
-
-        {/* Action buttons at the bottom */}
         <div className="flex flex-wrap gap-4 justify-center mt-12">
-          <Button 
+          <button 
             onClick={onRetakeQuiz} 
-            className="px-6 py-3 text-base min-w-[180px] bg-gray-100 text-black border-2 border-black inline-flex items-center justify-center font-medium shadow-sm"
+            className="px-6 py-3 text-base min-w-[180px] bg-gray-100 text-black border-2 border-black rounded-lg inline-flex items-center justify-center"
           >
             <RefreshCw className="w-5 h-5 mr-2" />
-            <span className="font-medium">Retake Assessment</span>
-          </Button>
-          <Button 
-            className="px-6 py-3 text-base min-w-[180px] bg-gray-100 text-black border-2 border-black inline-flex items-center justify-center font-medium shadow-sm"
+            Retake Assessment
+          </button>
+          <button 
+            className="px-6 py-3 text-base min-w-[180px] bg-gray-100 text-black border-2 border-black rounded-lg inline-flex items-center justify-center"
           >
             <Download className="w-5 h-5 mr-2" />
-            <span className="font-medium">Download Results</span>
-          </Button>
-          <Button 
-            className="px-6 py-3 text-base min-w-[180px] bg-gray-100 text-black border-2 border-black inline-flex items-center justify-center font-medium shadow-sm"
+            Download Results
+          </button>
+          <button 
+            className="px-6 py-3 text-base min-w-[180px] bg-gray-100 text-black border-2 border-black rounded-lg inline-flex items-center justify-center"
           >
             <Mail className="w-5 h-5 mr-2" />
-            <span className="font-medium">Send to Email</span>
-          </Button>
+            Send to Email
+          </button>
         </div>
       </div>
-    </div>
+    </BaseAssessment>
   );
 }
 
-// ===============================
-// MAIN ANALYZER COMPONENT
-// ===============================
-export default function ResilienceScoreAnalyzer() {
-  const [step, setStep] = useState<"intro" | "quiz" | "results">("intro");
+// =====================================
+// 🎯 MAIN COMPONENT
+// =====================================
+const ResilienceScoreAnalyzer = () => {
+  const [step, setStep] = useState<'hero' | 'quiz' | 'results'>('hero');
   const [results, setResults] = useState<ResilienceResults | null>(null);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {step === "intro" && (
-        <HeroSection onStartQuiz={() => setStep("quiz")} />
-      )}
-      {step === "quiz" && (
-        <ResilienceQuiz
-          onComplete={(res) => {
-            setResults(res);
-            setStep("results");
-          }}
-        />
-      )}
-      {step === "results" && results && (
-        <ResilienceResults
-          results={results}
-          onRetakeQuiz={() => {
-            setResults(null);
-            setStep("quiz");
-          }}
-        />
-      )}
-    </div>
-  );
-} 
+  const handleStartQuiz = () => {
+    setStep('quiz');
+  };
+
+  const handleComplete = (quizResults: ResilienceResults) => {
+    setResults(quizResults);
+    setStep('results');
+  };
+
+  const handleRetakeQuiz = () => {
+    setStep('quiz');
+  };
+
+  if (step === 'hero') {
+    return <HeroSection onStartQuiz={handleStartQuiz} />;
+  }
+
+  if (step === 'quiz') {
+    return <ResilienceQuiz onComplete={handleComplete} />;
+  }
+
+  if (step === 'results' && results) {
+    return <ResilienceResults results={results} onRetakeQuiz={handleRetakeQuiz} />;
+  }
+
+  return null;
+};
+
+export default ResilienceScoreAnalyzer; 

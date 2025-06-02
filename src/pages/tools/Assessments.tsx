@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const assessments = [
@@ -41,33 +41,84 @@ const assessments = [
 
 const Assessments = () => {
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [currentAssessment, setCurrentAssessment] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    gender: "",
+    email: ""
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleBegin = (assessmentSlug: string) => {
-    switch (assessmentSlug) {
-      case 'leadership-archetype':
-        navigate('/assessment/leadership');
-        break;
-      case 'resilience-score':
-        navigate('/assessment/resiliencescoreanalyzer');
-        break;
-      case 'burnout-risk':
-        navigate('/assessment/burnoutriskassessment');
-        break;
-      case 'productivity-style':
-        navigate('/assessment/productivity-style-quiz');
-        break;
-      case 'entrepreneurial-potential':
-        navigate('/assessment/entrepreneurial-potential');
-        break;
-      case 'emotional-intelligence':
-        navigate('/assessment/emotionalintelligenceevaluator');
-        break;
-      case 'mental-fitness-index':
-        navigate('/assessment/mental-fitness-index');
-        break;
-      default:
-        console.error('Unknown assessment type:', assessmentSlug);
+    setCurrentAssessment(assessmentSlug);
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Save assessment data
+      const response = await fetch('http://localhost:5000/api/assessment/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          gender: formData.gender,
+          assessmentType: currentAssessment
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save assessment data');
+      }
+
+      const data = await response.json();
+      setShowModal(false);
+      
+      // Navigate to assessment after form submission
+      switch (currentAssessment) {
+        case 'leadership-archetype':
+          navigate('/assessment/leadership');
+          break;
+        case 'resilience-score':
+          navigate('/assessment/resiliencescoreanalyzer');
+          break;
+        case 'burnout-risk':
+          navigate('/assessment/burnoutriskassessment');
+          break;
+        case 'productivity-style':
+          navigate('/assessment/productivity-style-quiz');
+          break;
+        case 'entrepreneurial-potential':
+          navigate('/assessment/entrepreneurial-potential');
+          break;
+        case 'emotional-intelligence':
+          navigate('/assessment/emotionalintelligenceevaluator');
+          break;
+        case 'mental-fitness-index':
+          navigate('/assessment/mental-fitness-index');
+          break;
+        default:
+          console.error('Unknown assessment type:', currentAssessment);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to start assessment. Please try again.');
     }
   };
+
   return (
     <div>
       <section className="section pb-0">
@@ -113,8 +164,70 @@ const Assessments = () => {
           </div>
         </div>
       </section>
+      
+      {/* Modal for user information */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <h2 className="text-xl font-bold mb-4">Let me Know About You</h2>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-2xl"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Gender</label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-2xl"
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-2xl"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+                >
+                  Continue
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Assessments; 
+export default Assessments;

@@ -180,11 +180,7 @@ const QuizSection = ({ onComplete, onBack }: { onComplete: (answers: Record<stri
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto px-6 py-8 max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <Button onClick={onBack} className="text-gray-500 hover:text-black hover:bg-gray-100 bg-transparent inline-flex items-center px-6 py-3">
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </Button>
+        <div className="flex items-center justify-center mb-8">
           <div className="flex items-center gap-3">
             <BarChart className="w-6 h-6 text-black" />
             <span className="text-xl font-semibold text-black">Leadership Assessment</span>
@@ -415,8 +411,66 @@ ${results.developmentAreas.map(area => `- ${area}`).join('\n')}
   );
 };
 
+// Home Page Component
+const HomePage = ({ onStart }: { onStart: () => void }) => (
+  <div className="min-h-screen bg-white">
+    <div className="container max-w-4xl mx-auto px-4 py-8 animate-fade-in">
+      <Card className="border-none shadow-lg bg-white">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl sm:text-4xl font-bold text-black">Leadership Archetype Assessment</CardTitle>
+          <CardDescription className="text-lg mt-2 text-black">Discover your unique leadership style and learn how to leverage your strengths</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold text-black mb-3">What is Leadership Archetype?</h2>
+            <p className="text-black mb-4">Your leadership archetype represents your natural approach to leading others, influencing decisions, and driving organizational success.</p>
+            <p className="text-black">This assessment will help you understand your core leadership style and provide actionable insights for growth.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg p-4 shadow-sm flex items-start space-x-3 border border-gray-200">
+              <div className="bg-gray-100 p-2 rounded-full">
+                <BarChart className="h-6 w-6 text-black" />
+              </div>
+              <div>
+                <h3 className="font-medium text-black">Personalized Insights</h3>
+                <p className="text-sm text-gray-600">Get detailed analysis of your leadership strengths and development areas</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm flex items-start space-x-3 border border-gray-200">
+              <div className="bg-gray-100 p-2 rounded-full">
+                <ChevronRight className="h-6 w-6 text-black" />
+              </div>
+              <div>
+                <h3 className="font-medium text-black">Actionable Recommendations</h3>
+                <p className="text-sm text-gray-600">Receive practical strategies to enhance your leadership effectiveness</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold text-black mb-3">About This Assessment</h2>
+            <ul className="space-y-2 text-black">
+              <li className="flex items-center"><span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span><span>Takes approximately 10-15 minutes to complete</span></li>
+              <li className="flex items-center"><span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span><span>Includes 24 questions across 10 key dimensions</span></li>
+              <li className="flex items-center"><span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span><span>Provides detailed feedback and personalized recommendations</span></li>
+              <li className="flex items-center"><span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span><span>Your responses are completely private and confidential</span></li>
+            </ul>
+          </div>
+        </CardContent>
+        <div className="flex justify-center pb-8">
+          <button
+            onClick={onStart}
+            className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105 text-lg"
+          >
+            Begin Assessment
+          </button>
+        </div>
+      </Card>
+    </div>
+  </div>
+);
+
 const LeadershipAssessment = () => {
-  const [currentView, setCurrentView] = useState<'quiz' | 'results'>('quiz');
+  const [currentView, setCurrentView] = useState<'home' | 'quiz' | 'results'>('home');
   const [results, setResults] = useState<AssessmentResults | null>(null);
 
   const handleQuizComplete = (answers: Record<string, number>) => {
@@ -450,14 +504,18 @@ const LeadershipAssessment = () => {
 
   const handleRestart = () => {
     setResults(null);
-    setCurrentView('quiz');
+    setCurrentView('home');
   };
 
   if (currentView === 'results' && results) {
     return <ResultsSection results={results} onRestart={handleRestart} />;
   }
 
-  return <QuizSection onComplete={handleQuizComplete} onBack={() => setCurrentView('quiz')} />;
+  if (currentView === 'quiz') {
+    return <QuizSection onComplete={handleQuizComplete} onBack={() => setCurrentView('home')} />;
+  }
+
+  return <HomePage onStart={() => setCurrentView('quiz')} />;
 };
 
 export default LeadershipAssessment; 
