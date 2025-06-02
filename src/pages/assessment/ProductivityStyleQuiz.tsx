@@ -326,6 +326,10 @@ const QuizSection = ({ onComplete, onBack }: QuizSectionProps) => {
 
 // Results Section Component
 const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+
   const handleDownloadResults = () => {
     const doc = new jsPDF();
     // Main Heading
@@ -395,42 +399,24 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
     doc.save('productivity-quiz-results.pdf');
   };
 
-  const handleEmailResults = () => {
-    const subject = 'My Productivity Style Quiz Results';
-    const body = `
-Hi,
+  const handleSendToEmail = () => {
+    setShowEmailModal(true);
+    setEmail("");
+    setEmailError("");
+  };
 
-Here are my Productivity Style Quiz results:
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setEmailError("");
+  };
 
-Type: ${results.type}
-Chronotype: ${results.chronotype}
-Description: ${results.description}
-
-Scores:
-- Cognitive Rhythm: ${results.score.cognitive}%
-- Work Style: ${results.score.workStyle}%
-- Energy Management: ${results.score.energy}%
-- Focus Drivers: ${results.score.focus}%
-- Tool Usage: ${results.score.toolUsage}%
-
-Strengths:
-${results.strengths.map(strength => `- ${strength}`).join('\n')}
-
-Challenges:
-${results.challenges.map(challenge => `- ${challenge}`).join('\n')}
-
-Recommended Time Blocking Strategies:
-${results.timeBlocking.map(strategy => `- ${strategy}`).join('\n')}
-
-Recommended Tools:
-${results.tools.map(tool => `- ${tool}`).join('\n')}
-
-Recommended Habits:
-${results.habits.map(habit => `- ${habit}`).join('\n')}
-    `;
-
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
+  const handleEmailSend = () => {
+    if (!email.match(/^\S+@\S+\.\S+$/)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+    setShowEmailModal(false);
+    // TODO: Implement actual send logic here
   };
 
   return (
@@ -564,16 +550,47 @@ ${results.habits.map(habit => `- ${habit}`).join('\n')}
             Download Results
           </Button>
           <Button
-            onClick={handleEmailResults}
+            onClick={handleSendToEmail}
             size="sm"
             variant="outline"
             className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors text-center whitespace-normal break-words flex items-center gap-2"
           >
             <Mail className="w-4 h-4" />
-            Email Results
+            Send to Email
           </Button>
         </div>
       </div>
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <h2 className="text-xl font-bold mb-4">Send Results to Email</h2>
+            <input
+              type="email"
+              placeholder="Enter your email address"
+              value={email}
+              onChange={handleEmailChange}
+              className="w-full p-2 border rounded-2xl mb-2"
+              required
+            />
+            {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
+            <div className="flex justify-end space-x-2 mt-4">
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEmailSend}
+                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

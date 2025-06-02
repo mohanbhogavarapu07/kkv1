@@ -700,6 +700,9 @@ const ResultsDashboard: React.FC<ResultsProps> = ({
   onRestart 
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'growth' | 'mindfulness'>('overview');
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   
   const dimensionNames: Record<string, string> = {
     'self-awareness': 'Self-Awareness',
@@ -757,6 +760,26 @@ const ResultsDashboard: React.FC<ResultsProps> = ({
     // ...repeat for other sections, using setFont and setFontSize as needed
 
     doc.save('emotional-intelligence-results.pdf');
+  };
+
+  const handleSendToEmail = () => {
+    setShowEmailModal(true);
+    setEmail("");
+    setEmailError("");
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setEmailError("");
+  };
+
+  const handleEmailSend = () => {
+    if (!email.match(/^\S+@\S+\.\S+$/)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+    setShowEmailModal(false);
+    // TODO: Implement actual send logic here
   };
 
   return (
@@ -979,12 +1002,43 @@ const ResultsDashboard: React.FC<ResultsProps> = ({
             <Download className="w-5 h-5 mr-2" />
             Download Results
           </Button>
-          <Button onClick={() => alert('Email functionality would be implemented here')} className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center">
+          <Button onClick={handleSendToEmail} className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center">
             <Mail className="w-5 h-5 mr-2" />
             Send to Email
           </Button>
         </div>
       </div>
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <h2 className="text-xl font-bold mb-4">Send Results to Email</h2>
+            <input
+              type="email"
+              placeholder="Enter your email address"
+              value={email}
+              onChange={handleEmailChange}
+              className="w-full p-2 border rounded-2xl mb-2"
+              required
+            />
+            {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
+            <div className="flex justify-end space-x-2 mt-4">
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEmailSend}
+                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

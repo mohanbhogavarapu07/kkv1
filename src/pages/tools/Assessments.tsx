@@ -46,7 +46,7 @@ const Assessments = () => {
   const [formData, setFormData] = useState({
     name: "",
     gender: "",
-    email: ""
+    age: ""
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -74,8 +74,8 @@ const Assessments = () => {
         },
         body: JSON.stringify({
           name: formData.name,
-          email: formData.email,
           gender: formData.gender,
+          age: formData.age,
           assessmentType: currentAssessment,
           attempted: true,
           createdAt: new Date().toISOString(),
@@ -200,15 +200,23 @@ const Assessments = () => {
                 </select>
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                <label className="block text-gray-700 mb-2">Age</label>
+                <select
+                  name="age"
+                  value={formData.age}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-2xl"
                   required
-                />
+                >
+                  <option value="">Select Age</option>
+                  <option value="11 to 17">11 to 17</option>
+                  <option value="18 to 24">18 to 24</option>
+                  <option value="25 to 34">25 to 34</option>
+                  <option value="35 to 44">35 to 44</option>
+                  <option value="45 to 54">45 to 54</option>
+                  <option value="55 to 64">55 to 64</option>
+                  <option value="65 or over">65 or over</option>
+                </select>
               </div>
               <div className="flex justify-end space-x-2">
                 <button

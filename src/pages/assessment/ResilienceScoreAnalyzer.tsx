@@ -642,6 +642,9 @@ function ResilienceResults({
   onRetakeQuiz: () => void;
 }) {
   const [activeTab, setActiveTab] = useState("scores");
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   const getScoreColor = (score: number) => {
     if (score >= 20) return 'text-green-400';
@@ -707,6 +710,28 @@ function ResilienceResults({
       doc.text(`- ${lesson}`, 18, y + i * 8);
     });
     doc.save('resilience-assessment-results.pdf');
+  };
+
+  const handleSendToEmail = () => {
+    setShowEmailModal(true);
+    setEmail("");
+    setEmailError("");
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setEmailError("");
+  };
+
+  const handleEmailSend = () => {
+    // Simple email validation
+    if (!email.match(/^\S+@\S+\.\S+$/)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+    // TODO: Implement actual send logic here
+    setShowEmailModal(false);
+    // Optionally show a success message
   };
 
   return (
@@ -1060,11 +1085,44 @@ function ResilienceResults({
           </Button>
           <Button 
             className="px-6 py-3 text-base min-w-[180px] bg-gray-100 text-black border-2 border-black inline-flex items-center justify-center font-medium shadow-sm"
+            onClick={handleSendToEmail}
           >
             <Mail className="w-5 h-5 mr-2" />
             <span className="font-medium">Send to Email</span>
           </Button>
         </div>
+
+        {/* Email Modal */}
+        {showEmailModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+              <h2 className="text-xl font-bold mb-4">Send Results to Email</h2>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={handleEmailChange}
+                className="w-full p-2 border rounded-2xl mb-2"
+                required
+              />
+              {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
+              <div className="flex justify-end space-x-2 mt-4">
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEmailSend}
+                  className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
