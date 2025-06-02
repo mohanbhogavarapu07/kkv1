@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Brain as BrainIcon, Lightbulb as LightbulbIcon, Target, Zap, TrendingUp, RotateCcw, Calendar, Clock, CheckCircle, Download, Mail } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Brain as BrainIcon, Lightbulb as LightbulbIcon, Target, Zap, TrendingUp, RotateCcw, Calendar, Clock, CheckCircle, Download, Mail, ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import jsPDF from 'jspdf';
 
 // =========================
 // Utilities
@@ -338,7 +339,7 @@ function AssessmentQuiz({ onComplete, onBack }: { onComplete: (results: any) => 
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         <div className="flex items-center justify-between mb-8">
           <Button onClick={onBack} className="text-gray-500 hover:text-black hover:bg-gray-100 bg-transparent inline-flex items-center px-6 py-3">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ChevronLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
           <div className="flex items-center gap-3">
@@ -383,12 +384,14 @@ function AssessmentQuiz({ onComplete, onBack }: { onComplete: (results: any) => 
         </Card>
         <div className="flex justify-between">
           <Button onClick={handlePrevious} disabled={currentQuestion === 0} className="border-black text-black hover:bg-gray-100 disabled:text-gray-300 disabled:border-gray-300 bg-white inline-flex items-center px-6 py-3">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+          <ChevronLeft className="w-4 h-4 mr-2" />
             Previous
+           
           </Button>
           <Button onClick={handleNext} disabled={selectedAnswer === null} className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3">
-            <ArrowRight className="w-4 h-4 mr-2" />
+            
             {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+            <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>
@@ -397,6 +400,57 @@ function AssessmentQuiz({ onComplete, onBack }: { onComplete: (results: any) => 
 }
 
 function ResultsDashboard({ results, onViewTraining, onRetakeAssessment }: { results: any; onViewTraining: () => void; onRetakeAssessment: () => void; }) {
+  const handleDownloadResults = () => {
+    const doc = new jsPDF();
+    // Main Heading
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Mental Fitness Index Results', 105, 20, { align: 'center' });
+    // Subheading
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', 14, 35);
+    // Body
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`MFI Score: ${results.mfiScore}`, 14, 45);
+    doc.text(`Category: ${results.category}`, 14, 53);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`"${results.description}"`, 14, 61, { maxWidth: 180 });
+    // Section Heading
+    doc.setFont('helvetica', 'bold');
+    doc.text('Scores:', 14, 75);
+    doc.setFont('helvetica', 'normal');
+    let y = 83;
+    doc.text(`- Mental VO₂ Max: ${results.mvo2Score}`, 18, y); y += 8;
+    doc.text(`- Recovery Index: ${results.recoveryIndex}/10`, 18, y); y += 8;
+    doc.text(`- Focus Endurance: ${results.focusEndurance}%`, 18, y); y += 8;
+    doc.text(`- Task Agility: ${results.taskAgility}%`, 18, y); y += 8;
+    // Strengths
+    doc.setFont('helvetica', 'bold');
+    doc.text('Strengths:', 14, y + 4); y += 12;
+    doc.setFont('helvetica', 'normal');
+    results.strengths.forEach((s: string, i: number) => {
+      doc.text(`- ${s}`, 18, y + i * 8);
+    });
+    y = y + results.strengths.length * 8 + 8;
+    // Growth Opportunities
+    doc.setFont('helvetica', 'bold');
+    doc.text('Growth Opportunities:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    results.weaknesses.forEach((w: string, i: number) => {
+      doc.text(`- ${w}`, 18, y + i * 8);
+    });
+    y = y + results.weaknesses.length * 8 + 8;
+    // Recommended Mode
+    doc.setFont('helvetica', 'bold');
+    doc.text('Recommended Mode:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${results.recommendedMode}`, 18, y); y += 8;
+    doc.setFont('helvetica', 'italic');
+    doc.text(`${results.modeDescription}`, 18, y, { maxWidth: 180 });
+    doc.save('mental-fitness-results.pdf');
+  };
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto px-6 py-8 max-w-6xl">
@@ -534,12 +588,12 @@ function ResultsDashboard({ results, onViewTraining, onRetakeAssessment }: { res
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
           <Button onClick={onRetakeAssessment} className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center">
-            <RotateCcw className="w-5 h-5 mr-2" />
+            <RefreshCcw className="w-5 h-5 mr-2" />
             Retake Assessment
           </Button>
-          <Button className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center">
+          <Button className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center" onClick={handleDownloadResults}>
             <Download className="w-5 h-5 mr-2" />
-            Download Report
+            Download Results
           </Button>
           <Button className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center">
             <Mail className="w-5 h-5 mr-2" />

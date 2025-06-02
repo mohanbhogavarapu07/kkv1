@@ -57,6 +57,22 @@ const Assessments = () => {
     }));
   };
 
+  const [showModal, setShowModal] = useState(false);
+  const [currentAssessment, setCurrentAssessment] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    gender: "",
+    email: ""
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleBegin = (assessmentSlug: string) => {
     setCurrentAssessment(assessmentSlug);
     setShowModal(true);
@@ -116,6 +132,40 @@ const Assessments = () => {
     } catch (error) {
       console.error('Error:', error);
       alert('Failed to start assessment. Please try again.');
+    setCurrentAssessment(assessmentSlug);
+    setShowModal(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you can add validation and submission logic
+    setShowModal(false);
+    
+    // Navigate to assessment after form submission
+    switch (currentAssessment) {
+      case 'leadership-archetype':
+        navigate('/assessment/leadership');
+        break;
+      case 'resilience-score':
+        navigate('/assessment/resiliencescoreanalyzer');
+        break;
+      case 'burnout-risk':
+        navigate('/assessment/burnoutriskassessment');
+        break;
+      case 'productivity-style':
+        navigate('/assessment/productivity-style-quiz');
+        break;
+      case 'entrepreneurial-potential':
+        navigate('/assessment/entrepreneurial-potential');
+        break;
+      case 'emotional-intelligence':
+        navigate('/assessment/emotionalintelligenceevaluator');
+        break;
+      case 'mental-fitness-index':
+        navigate('/assessment/mental-fitness-index');
+        break;
+      default:
+        console.error('Unknown assessment type:', assessmentSlug);
     }
   };
 

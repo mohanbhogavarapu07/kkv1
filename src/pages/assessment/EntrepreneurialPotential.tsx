@@ -3,7 +3,8 @@
 // ===============================
 import React, { createContext, useContext, useState, useRef, useEffect, ReactNode, forwardRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Check, ArrowRight, ArrowLeft, Download, RotateCcw, Mail } from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, Download, RotateCcw, Mail, ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
+import jsPDF from 'jspdf';
 
 // ===============================
 // TypeScript Types & Interfaces
@@ -530,7 +531,7 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
     })?.name || "The Balanced Entrepreneur";
     // Determine strengths (top 2 dimensions)
     const sortedDimensions = Object.entries(cappedDimensions)
-      .sort(([,a], [,b]) => b - a);
+      .sort(([, a], [, b]) => b - a);
     const strengths = sortedDimensions.slice(0, 2).map(([dimension]) => {
       const readableDimension = {
         riskTolerance: "Navigating Uncertainty",
@@ -654,6 +655,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   asChild?: boolean;
+  rounded?: 'md' | 'full';
 };
 
 const buttonVariants: Record<ButtonVariant, string> = {
@@ -673,13 +675,14 @@ const buttonSizes: Record<ButtonSize, string> = {
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size = 'default', asChild = false, ...props }, ref) => {
+  ({ className, variant = 'default', size = 'default', asChild = false, rounded = 'md', ...props }, ref) => {
     const Comp: any = asChild ? 'span' : 'button';
     return (
       <Comp
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+          rounded === 'full' ? 'rounded-full' : 'rounded-md',
           buttonVariants[variant],
           buttonSizes[size],
           className
@@ -873,9 +876,12 @@ const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, children, ...props }) 
       type="button"
       aria-selected={isActive}
       onClick={() => context.setValue(value)}
+      data-state={isActive ? 'active' : undefined}
       className={cn(
         'transition-colors px-4 py-2 rounded-md font-medium',
-        isActive ? 'bg-black text-white' : 'bg-white text-black',
+        isActive
+          ? 'bg-black text-white shadow-sm'
+          : 'bg-white text-black',
         props.className
       )}
       {...props}
@@ -988,12 +994,7 @@ const IndexPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             </div>
           </CardContent>
           <div className="flex justify-center pb-8">
-            <button
-              onClick={onStart}
-              className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105 text-lg"
-            >
-              Begin Assessment
-            </button>
+            <Button onClick={onStart} rounded="full" className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 shadow-md transition-all hover:scale-105" style={{ fontSize: '1.125rem' }}>Begin Assessment</Button>
           </div>
         </Card>
       </div>
@@ -1093,7 +1094,14 @@ const AssessmentPage: React.FC<{ onComplete: () => void; onBack: () => void }> =
         </div>
       </CardContent>
       <div className="flex justify-center pb-8">
-        <Button onClick={() => setShowIntro(false)} className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105" style={{ fontSize: '1.125rem' }}>Start Assessment <ArrowRight className="ml-2 h-4 w-4" /></Button>
+        <Button
+          onClick={() => setShowIntro(false)}
+          rounded="full"
+          className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 shadow-md transition-all hover:scale-105"
+          style={{ fontSize: '1.125rem' }}
+        >
+          Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
       </div>
     </Card>
   );
@@ -1109,19 +1117,19 @@ const AssessmentPage: React.FC<{ onComplete: () => void; onBack: () => void }> =
   }
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-white text-grey">
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         {/* Back to Home Button */}
         <div className="flex items-center justify-between mb-8">
           <Button
             onClick={onBack}
             variant="outline"
-            className="inline-flex items-center px-6 py-3 rounded"
+            className="inline-flex items-center px-6 py-3 rounded border-none bg-gray-200 text-black hover:bg-gray-300"
             style={{ transition: 'background 0.2s' }}
-            onMouseOver={e => e.currentTarget.style.background = '#d3d3d3'}
-            onMouseOut={e => e.currentTarget.style.background = 'white'}
+            onMouseOver={e => e.currentTarget.style.background = '#e5e7eb'}
+            onMouseOut={e => e.currentTarget.style.background = '#f3f4f6'}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ChevronLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
           <div className="flex items-center gap-3">
@@ -1187,12 +1195,12 @@ const AssessmentPage: React.FC<{ onComplete: () => void; onBack: () => void }> =
             onMouseOver={e => e.currentTarget.style.background = '#d3d3d3'}
             onMouseOut={e => e.currentTarget.style.background = 'white'}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ChevronLeft className="w-4 h-4 mr-2" />
             Previous
           </Button>
           <Button onClick={handleNextPage} disabled={currentQuestions.some(q => getCurrentAnswer(q.id) === undefined)} className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3">
-            <ArrowRight className="w-4 h-4 mr-2" />
             {isLastPage ? 'Complete Assessment' : 'Next Question'}
+            <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>
@@ -1218,6 +1226,69 @@ const ResultsPage: React.FC<{ onRestart: () => void }> = ({ onRestart }) => {
   const getScoreColor = () => "text-black";
   const getDimensionWidth = (score: number): string => `${(score / 20) * 100}%`;
   const getDimensionColorClass = () => "bg-gray-700";
+
+  const handleDownloadResults = () => {
+    const doc = new jsPDF();
+    // Main Heading
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Entrepreneurial Potential Results', 105, 20, { align: 'center' });
+    // Subheading
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', 14, 35);
+    // Body
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Score: ${results.totalScore}`, 14, 45);
+    doc.text(`Rank: ${results.rank}`, 14, 53);
+    doc.text(`Persona: ${results.persona}`, 14, 61);
+    // Section Heading
+    doc.setFont('helvetica', 'bold');
+    doc.text('Dimension Scores:', 14, 75);
+    doc.setFont('helvetica', 'normal');
+    let y = 83;
+    Object.entries(results.dimensions).forEach(([dimension, score]) => {
+      doc.text(`- ${dimensionNames[dimension] || dimension}: ${score}/20`, 18, y);
+      y += 8;
+    });
+    // Strengths
+    doc.setFont('helvetica', 'bold');
+    doc.text('Strengths:', 14, y + 4); y += 12;
+    doc.setFont('helvetica', 'normal');
+    results.strengths.forEach((s: string, i: number) => {
+      doc.text(`- ${s}`, 18, y + i * 8);
+    });
+    y = y + results.strengths.length * 8 + 8;
+    // Growth Opportunities
+    doc.setFont('helvetica', 'bold');
+    doc.text('Growth Opportunities:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    results.weaknesses.forEach((w: string, i: number) => {
+      doc.text(`- ${w}`, 18, y + i * 8);
+    });
+    y = y + results.weaknesses.length * 8 + 8;
+    // 90-Day Roadmap
+    doc.setFont('helvetica', 'bold');
+    doc.text('90-Day Roadmap:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.text('First 30 Days:', 18, y); y += 8;
+    results.roadmap.thirty.forEach((item: string, i: number) => {
+      doc.text(`- ${item}`, 22, y + i * 8);
+    });
+    let y2 = y + results.roadmap.thirty.length * 8 + 4;
+    doc.text('Days 31-60:', 18, y2); y2 += 8;
+    results.roadmap.sixty.forEach((item: string, i: number) => {
+      doc.text(`- ${item}`, 22, y2 + i * 8);
+    });
+    y2 = y2 + results.roadmap.sixty.length * 8 + 4;
+    doc.text('Days 61-90:', 18, y2); y2 += 8;
+    results.roadmap.ninety.forEach((item: string, i: number) => {
+      doc.text(`- ${item}`, 22, y2 + i * 8);
+    });
+    doc.save('entrepreneurial-potential-results.pdf');
+  };
+
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto px-6 py-8 max-w-6xl">
@@ -1309,18 +1380,8 @@ const ResultsPage: React.FC<{ onRestart: () => void }> = ({ onRestart }) => {
           <CardContent>
             <Tabs defaultValue="roadmap" className="mb-8">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100 border border-gray-200">
-                <TabsTrigger
-                  value="roadmap"
-                  className="custom-tab px-4 py-2 font-medium transition-colors rounded-md border-none bg-gray-100 text-black"
-                >
-                  90-Day Roadmap
-                </TabsTrigger>
-                <TabsTrigger
-                  value="resources"
-                  className="custom-tab px-4 py-2 font-medium transition-colors rounded-md border-none bg-gray-100 text-black"
-                >
-                  Recommended Resources
-                </TabsTrigger>
+                <TabsTrigger value="roadmap">90-Day Roadmap</TabsTrigger>
+                <TabsTrigger value="resources">Recommended Resources</TabsTrigger>
               </TabsList>
               <TabsContent value="roadmap" className="mt-6 bg-gray-50 rounded-md p-6">
                 <div className="grid md:grid-cols-2 gap-6">
@@ -1390,8 +1451,8 @@ const ResultsPage: React.FC<{ onRestart: () => void }> = ({ onRestart }) => {
             onMouseOver={e => e.currentTarget.style.background = '#d3d3d3'}
             onMouseOut={e => e.currentTarget.style.background = 'white'}
           >
-            <RotateCcw className="w-5 h-5 mr-2" />
-            Retake Test
+            <RefreshCcw className="w-5 h-5 mr-2" />
+            Retake Assessment
           </Button>
           <Button
             variant="outline"
@@ -1399,9 +1460,10 @@ const ResultsPage: React.FC<{ onRestart: () => void }> = ({ onRestart }) => {
             style={{ transition: 'background 0.2s' }}
             onMouseOver={e => e.currentTarget.style.background = '#d3d3d3'}
             onMouseOut={e => e.currentTarget.style.background = 'white'}
+            onClick={handleDownloadResults}
           >
             <Download className="w-5 h-5 mr-2" />
-            Download
+            Download Results
           </Button>
           <Button
             variant="outline"
@@ -1466,4 +1528,4 @@ const EntrepreneurialPotential: React.FC = () => {
   );
 };
 
-export default EntrepreneurialPotential; 
+export default EntrepreneurialPotential;

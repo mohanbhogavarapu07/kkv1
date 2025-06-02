@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, BarChart, Download, Mail, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, BarChart, Download, Mail, Share2, RefreshCcw } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { clsx, ClassValue } from "clsx";
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import jsPDF from 'jspdf';
 
 // Utility to merge class names
 function cn(...inputs: ClassValue[]) {
@@ -196,7 +197,8 @@ const IntroSection = ({ onStart }: { onStart: () => void }) => (
         <div className="text-center">
           <button
             onClick={onStart}
-            className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105 text-lg"
+            className="bg-black text-white hover:bg-gray-800 px-8 py-3 text-lg rounded-full shadow-md transition-all hover:scale-105"
+            style={{ fontSize: '1.125rem' }}
           >
             Begin Assessment
           </button>
@@ -313,8 +315,8 @@ const QuizSection = ({ onComplete, onBack }: QuizSectionProps) => {
             disabled={selectedAnswer === null}
             className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3"
           >
-            <ChevronRight className="w-4 h-4 mr-2" />
             {currentQuestion === questions.length - 1 ? "Complete Assessment" : "Next Question"}
+            <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>
@@ -325,46 +327,72 @@ const QuizSection = ({ onComplete, onBack }: QuizSectionProps) => {
 // Results Section Component
 const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
   const handleDownloadResults = () => {
-    const resultsText = `
-Productivity Style Quiz Results
-=============================
-
-Type: ${results.type}
-Chronotype: ${results.chronotype}
-Description: ${results.description}
-
-Scores:
-- Cognitive Rhythm: ${results.score.cognitive}%
-- Work Style: ${results.score.workStyle}%
-- Energy Management: ${results.score.energy}%
-- Focus Drivers: ${results.score.focus}%
-- Tool Usage: ${results.score.toolUsage}%
-
-Strengths:
-${results.strengths.map(strength => `- ${strength}`).join('\n')}
-
-Challenges:
-${results.challenges.map(challenge => `- ${challenge}`).join('\n')}
-
-Recommended Time Blocking Strategies:
-${results.timeBlocking.map(strategy => `- ${strategy}`).join('\n')}
-
-Recommended Tools:
-${results.tools.map(tool => `- ${tool}`).join('\n')}
-
-Recommended Habits:
-${results.habits.map(habit => `- ${habit}`).join('\n')}
-    `;
-
-    const blob = new Blob([resultsText], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'productivity-quiz-results.txt';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    const doc = new jsPDF();
+    // Main Heading
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Productivity Style Quiz Results', 105, 20, { align: 'center' });
+    // Subheading
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', 14, 35);
+    // Body
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Type: ${results.type}`, 14, 45);
+    doc.text(`Chronotype: ${results.chronotype}`, 14, 53);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`"${results.description}"`, 14, 61, { maxWidth: 180 });
+    // Section Heading
+    doc.setFont('helvetica', 'bold');
+    doc.text('Scores:', 14, 75);
+    doc.setFont('helvetica', 'normal');
+    let y = 83;
+    doc.text(`- Cognitive Rhythm: ${results.score.cognitive}%`, 18, y); y += 8;
+    doc.text(`- Work Style: ${results.score.workStyle}%`, 18, y); y += 8;
+    doc.text(`- Energy Management: ${results.score.energy}%`, 18, y); y += 8;
+    doc.text(`- Focus Drivers: ${results.score.focus}%`, 18, y); y += 8;
+    doc.text(`- Tool Usage: ${results.score.toolUsage}%`, 18, y); y += 8;
+    // Strengths
+    doc.setFont('helvetica', 'bold');
+    doc.text('Strengths:', 14, y + 4); y += 12;
+    doc.setFont('helvetica', 'normal');
+    results.strengths.forEach((s: string, i: number) => {
+      doc.text(`- ${s}`, 18, y + i * 8);
+    });
+    y = y + results.strengths.length * 8 + 8;
+    // Challenges
+    doc.setFont('helvetica', 'bold');
+    doc.text('Challenges:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    results.challenges.forEach((c: string, i: number) => {
+      doc.text(`- ${c}`, 18, y + i * 8);
+    });
+    y = y + results.challenges.length * 8 + 8;
+    // Time Blocking
+    doc.setFont('helvetica', 'bold');
+    doc.text('Recommended Time Blocking Strategies:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    results.timeBlocking.forEach((t: string, i: number) => {
+      doc.text(`- ${t}`, 18, y + i * 8);
+    });
+    y = y + results.timeBlocking.length * 8 + 8;
+    // Tools
+    doc.setFont('helvetica', 'bold');
+    doc.text('Recommended Tools:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    results.tools.forEach((t: string, i: number) => {
+      doc.text(`- ${t}`, 18, y + i * 8);
+    });
+    y = y + results.tools.length * 8 + 8;
+    // Habits
+    doc.setFont('helvetica', 'bold');
+    doc.text('Recommended Habits:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    results.habits.forEach((h: string, i: number) => {
+      doc.text(`- ${h}`, 18, y + i * 8);
+    });
+    doc.save('productivity-quiz-results.pdf');
   };
 
   const handleEmailResults = () => {
@@ -518,6 +546,15 @@ ${results.habits.map(habit => `- ${habit}`).join('\n')}
         </Card>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
+            onClick={onRestart}
+            size="sm"
+            variant="outline"
+            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors text-center whitespace-normal break-words flex items-center gap-2"
+          >
+            <RefreshCcw className="w-4 h-4" />
+            Retake Assessment
+          </Button>
+          <Button
             onClick={handleDownloadResults}
             size="sm"
             variant="outline"
@@ -534,15 +571,6 @@ ${results.habits.map(habit => `- ${habit}`).join('\n')}
           >
             <Mail className="w-4 h-4" />
             Email Results
-          </Button>
-          <Button
-            onClick={onRestart}
-            size="sm"
-            variant="outline"
-            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors text-center whitespace-normal break-words flex items-center gap-2"
-          >
-            <Share2 className="w-4 h-4" />
-            Retake Assessment
           </Button>
         </div>
       </div>

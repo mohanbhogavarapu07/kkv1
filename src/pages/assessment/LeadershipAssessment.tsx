@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, BarChart, Download, Mail, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, BarChart, Download, Mail, Share2, RefreshCcw } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import jsPDF from 'jspdf';
 
 interface AssessmentResults {
   style: string;
@@ -249,8 +250,8 @@ const QuizSection = ({ onComplete, onBack }: { onComplete: (answers: Record<stri
             disabled={selectedAnswer === null}
             className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3"
           >
-            <ChevronRight className="w-4 h-4 mr-2" />
             {currentQuestion === questions.length - 1 ? "Complete Assessment" : "Next Question"}
+            <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>
@@ -261,32 +262,46 @@ const QuizSection = ({ onComplete, onBack }: { onComplete: (answers: Record<stri
 // Results Section Component
 const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
   const handleDownloadResults = () => {
-    const resultsText = `
-Leadership Assessment Results
-===========================
-
-Leadership Style: ${results.style}
-Description: ${results.description}
-
-Scores:
-${Object.entries(results.scores).map(([category, score]) => `- ${category}: ${score}%`).join('\n')}
-
-Strengths:
-${results.strengths.map(strength => `- ${strength}`).join('\n')}
-
-Development Areas:
-${results.developmentAreas.map(area => `- ${area}`).join('\n')}
-    `;
-
-    const blob = new Blob([resultsText], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'leadership-assessment-results.txt';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    const doc = new jsPDF();
+    // Main Heading
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Leadership Assessment Results', 105, 20, { align: 'center' });
+    // Subheading
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', 14, 35);
+    // Body
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Leadership Style: ${results.style}`, 14, 45);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`"${results.description}"`, 14, 53, { maxWidth: 180 });
+    // Section Heading
+    doc.setFont('helvetica', 'bold');
+    doc.text('Scores:', 14, 67);
+    doc.setFont('helvetica', 'normal');
+    let y = 75;
+    Object.entries(results.scores).forEach(([category, score]) => {
+      doc.text(`- ${category}: ${score}%`, 18, y);
+      y += 8;
+    });
+    // Strengths
+    doc.setFont('helvetica', 'bold');
+    doc.text('Strengths:', 14, y + 4); y += 12;
+    doc.setFont('helvetica', 'normal');
+    results.strengths.forEach((s: string, i: number) => {
+      doc.text(`- ${s}`, 18, y + i * 8);
+    });
+    y = y + results.strengths.length * 8 + 8;
+    // Development Areas
+    doc.setFont('helvetica', 'bold');
+    doc.text('Development Areas:', 14, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    results.developmentAreas.forEach((d: string, i: number) => {
+      doc.text(`- ${d}`, 18, y + i * 8);
+    });
+    doc.save('leadership-assessment-results.pdf');
   };
 
   const handleEmailResults = () => {
@@ -379,6 +394,15 @@ ${results.developmentAreas.map(area => `- ${area}`).join('\n')}
         </div>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
+            onClick={onRestart}
+            size="sm"
+            variant="outline"
+            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors text-center whitespace-normal break-words flex items-center gap-2"
+          >
+            <RefreshCcw className="w-4 h-4" />
+            Retake Assessment
+          </Button>
+          <Button
             onClick={handleDownloadResults}
             size="sm"
             variant="outline"
@@ -394,22 +418,72 @@ ${results.developmentAreas.map(area => `- ${area}`).join('\n')}
             className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors text-center whitespace-normal break-words flex items-center gap-2"
           >
             <Mail className="w-4 h-4" />
-            Email Results
-          </Button>
-          <Button
-            onClick={onRestart}
-            size="sm"
-            variant="outline"
-            className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors text-center whitespace-normal break-words flex items-center gap-2"
-          >
-            <Share2 className="w-4 h-4" />
-            Retake Assessment
+            Send to Email
           </Button>
         </div>
       </div>
     </div>
   );
 };
+
+// Introduction Page Component
+const IntroductionPage = ({ onStart }: { onStart: () => void }) => (
+  <div className="min-h-screen bg-white text-black">
+    <div className="container mx-auto px-6 py-8 max-w-4xl">
+      <Card className="border-none shadow-lg bg-white">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl sm:text-4xl font-bold text-black">Leadership Assessment</CardTitle>
+          <CardDescription className="text-lg mt-2 text-black">
+            Discover your leadership style, strengths, and areas for growth
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold text-black mb-3">What is Leadership Assessment?</h2>
+            <p className="text-black mb-4">
+              This assessment helps you understand your leadership style, core competencies, and development areas. Use it to gain insights into your approach to vision, communication, decision making, team building, and more.
+            </p>
+            <p className="text-black">
+              Get a personalized profile and actionable recommendations to elevate your leadership impact.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg p-4 shadow-sm flex items-start space-x-3 border border-gray-200">
+              <div className="bg-gray-100 p-2 rounded-full">
+                <BarChart className="h-6 w-6 text-black" />
+              </div>
+              <div>
+                <h3 className="font-medium text-black">Self-Discovery</h3>
+                <p className="text-sm text-gray-600">Identify your unique leadership strengths and style</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm flex items-start space-x-3 border border-gray-200">
+              <div className="bg-gray-100 p-2 rounded-full">
+                <ChevronRight className="h-6 w-6 text-black" />
+              </div>
+              <div>
+                <h3 className="font-medium text-black">Growth Focus</h3>
+                <p className="text-sm text-gray-600">Pinpoint areas for development and actionable next steps</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold text-black mb-3">About This Assessment</h2>
+            <ul className="space-y-2 text-black">
+              <li className="flex items-center"><span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span><span>Takes approximately 8-10 minutes to complete</span></li>
+              <li className="flex items-center"><span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span><span>Includes 25 questions across 10 leadership competencies</span></li>
+              <li className="flex items-center"><span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span><span>Provides a detailed profile and personalized recommendations</span></li>
+              <li className="flex items-center"><span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span><span>Your responses are private and confidential</span></li>
+            </ul>
+          </div>
+        </CardContent>
+        <div className="flex justify-center pb-8">
+          <Button onClick={onStart} className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105" style={{ fontSize: '1.125rem' }}>Begin Assessment</Button>
+        </div>
+      </Card>
+    </div>
+  </div>
+);
 
 // Home Page Component
 const HomePage = ({ onStart }: { onStart: () => void }) => (
@@ -470,7 +544,7 @@ const HomePage = ({ onStart }: { onStart: () => void }) => (
 );
 
 const LeadershipAssessment = () => {
-  const [currentView, setCurrentView] = useState<'home' | 'quiz' | 'results'>('home');
+  const [currentView, setCurrentView] = useState<'intro' | 'quiz' | 'results'>('intro');
   const [results, setResults] = useState<AssessmentResults | null>(null);
 
   const handleQuizComplete = (answers: Record<string, number>) => {
@@ -504,18 +578,18 @@ const LeadershipAssessment = () => {
 
   const handleRestart = () => {
     setResults(null);
-    setCurrentView('home');
+    setCurrentView('intro');
   };
+
+  if (currentView === 'intro') {
+    return <IntroductionPage onStart={() => setCurrentView('quiz')} />;
+  }
 
   if (currentView === 'results' && results) {
     return <ResultsSection results={results} onRestart={handleRestart} />;
   }
 
-  if (currentView === 'quiz') {
-    return <QuizSection onComplete={handleQuizComplete} onBack={() => setCurrentView('home')} />;
-  }
-
-  return <HomePage onStart={() => setCurrentView('quiz')} />;
+  return <QuizSection onComplete={handleQuizComplete} onBack={() => setCurrentView('intro')} />;
 };
 
 export default LeadershipAssessment; 
