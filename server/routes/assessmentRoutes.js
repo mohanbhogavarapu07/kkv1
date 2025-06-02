@@ -6,15 +6,15 @@ const router = express.Router();
 // Start a new assessment
 router.post('/start', async (req, res) => {
   try {
-    const { name, email, gender, assessmentType } = req.body;
+    const { name, age, gender, assessmentType } = req.body;
 
-    if (!name || !email || !gender || !assessmentType) {
+    if (!name || !age || !gender || !assessmentType) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
     const assessment = new Assessment({
       name,
-      email,
+      age,
       gender,
       assessmentType,
       attempted: true

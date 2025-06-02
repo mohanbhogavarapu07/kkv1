@@ -6,11 +6,10 @@ const assessmentSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  email: {
+  age: {
     type: String,
     required: true,
-    trim: true,
-    lowercase: true
+    enum: ['18 to 24', '25 to 34', '35 to 44', '45 to 54', '55 to 64', '65+']
   },
   gender: {
     type: String,
