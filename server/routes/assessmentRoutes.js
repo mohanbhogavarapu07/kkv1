@@ -16,7 +16,8 @@ router.post('/start', async (req, res) => {
       name,
       email,
       gender,
-      assessmentType
+      assessmentType,
+      attempted: true
     });
 
     await assessment.save();

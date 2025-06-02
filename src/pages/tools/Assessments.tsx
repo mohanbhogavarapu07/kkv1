@@ -76,7 +76,10 @@ const Assessments = () => {
           name: formData.name,
           email: formData.email,
           gender: formData.gender,
-          assessmentType: currentAssessment
+          assessmentType: currentAssessment,
+          attempted: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         }),
       });
 

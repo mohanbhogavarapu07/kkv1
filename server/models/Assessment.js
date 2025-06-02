@@ -30,18 +30,9 @@ const assessmentSchema = new mongoose.Schema({
       'mental-fitness-index'
     ]
   },
-  startedAt: {
-    type: Date,
-    default: Date.now
-  },
-  completedAt: {
-    type: Date,
-    default: null
-  },
-  status: {
-    type: String,
-    enum: ['started', 'completed'],
-    default: 'started'
+  attempted: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true

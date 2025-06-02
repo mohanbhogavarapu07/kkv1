@@ -1102,4 +1102,6 @@ const ResilienceScoreAnalyzer = () => {
       )}
     </div>
   );
-} 
+};
+
+export default ResilienceScoreAnalyzer; 
