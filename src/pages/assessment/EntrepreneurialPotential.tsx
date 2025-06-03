@@ -3,20 +3,8 @@
 // ===============================
 import React, { createContext, useContext, useState, useRef, useEffect, ReactNode, forwardRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Check, ArrowRight, ArrowLeft, Download, RotateCcw, Mail, ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, Download, RotateCcw, Mail, ChevronLeft, ChevronRight, RefreshCcw, CheckCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
-import { sendAssessmentResults } from '@/services/emailService';
-import { toast } from 'sonner';
-
-
-// Custom hook for assessment functionality
-const useAssessment = () => {
-  const context = useContext(AssessmentContext);
-  if (!context) {
-    throw new Error('useAssessment must be used within an AssessmentProvider');
-  }
-  return context;
-};
 
 // ===============================
 // TypeScript Types & Interfaces
@@ -71,16 +59,7 @@ type AssessmentContextType = {
   currentModel: "startup" | "solopreneur";
   setCurrentModel: (model: "startup" | "solopreneur") => void;
   resetAssessment: () => void;
-  showEmailModal: boolean;
-  setShowEmailModal: (show: boolean) => void;
   handleSendToEmail: () => void;
-  handleEmailSend: () => void;
-  email: string;
-  setEmail: (email: string) => void;
-  emailError: string;
-  startAssessment: (type: string) => Promise<void>;
-  completeAssessment: (results: any) => Promise<void>;
-  abandonAssessment: (reason: string) => Promise<void>;
 };
 
 // ===============================
@@ -475,6 +454,8 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const addResponse = (response: Response) => {
     // Replace if the question has already been answered
@@ -646,13 +627,9 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
     setEmailError("");
   };
 
-  const dimensionNames: { [key in Dimension]: string } = {
-    riskTolerance: "Risk Tolerance",
-    innovationMindset: "Innovation Mindset",
-    executionGrit: "Execution & Grit",
-    scalabilityIQ: "Scalability IQ",
-    founderVision: "Founder Vision",
-    solopreneurship: "Solopreneur Readiness"
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setEmailError("");
   };
 
   const handleEmailSend = async () => {
@@ -661,70 +638,75 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
       return;
     }
 
+    setIsSending(true);
+    setEmailError("");
+
     try {
+      // Generate PDF
       const doc = new jsPDF();
-      doc.setFontSize(22);
+      let y = 20;
+
+      // Add content to PDF
       doc.setFont('helvetica', 'bold');
-      doc.text('Entrepreneurial Potential Assessment Results', 105, 20, { align: 'center' });
-      doc.setFontSize(16);
-      doc.text('Summary', 14, 35);
-      doc.setFontSize(12);
+      doc.text('Entrepreneurial Potential Assessment Results', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      doc.text(`Total Score: ${results.totalScore}`, 14, 45);
-      doc.text(`Rank: ${results.rank}`, 14, 53);
-      doc.text(`Persona: ${results.persona}`, 14, 61);
+      doc.text(`Total Score: ${results.totalScore}`, 14, y); y += 10;
+      doc.text(`Rank: ${results.rank}`, 14, y); y += 10;
+      doc.text(`Persona: ${results.persona}`, 14, y); y += 20;
+
+      // Add dimension scores
       doc.setFont('helvetica', 'bold');
-      doc.text('Dimension Scores:', 14, 75);
+      doc.text('Dimension Scores:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      let y = 83;
-      Object.entries(results.dimensions).forEach(([dimension, score]) => {
-        doc.text(`- ${dimensionNames[dimension] || dimension}: ${score}/20`, 18, y);
-        y += 8;
-      });
+      doc.text(`Innovation: ${results.dimensions.innovationMindset}/20`, 18, y); y += 8;
+      doc.text(`Risk Management: ${results.dimensions.riskTolerance}/20`, 18, y); y += 8;
+      doc.text(`Resourcefulness: ${results.dimensions.scalabilityIQ}/20`, 18, y); y += 8;
+      doc.text(`Market Awareness: ${results.dimensions.founderVision}/20`, 18, y); y += 20;
+
+      // Add strengths and development areas
       doc.setFont('helvetica', 'bold');
-      doc.text('Strengths:', 14, y + 4); y += 12;
+      doc.text('Key Strengths:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      results.strengths.forEach((s: string, i: number) => {
-        doc.text(`- ${s}`, 18, y + i * 8);
+      results.strengths.forEach((strength: string, i: number) => {
+        doc.text(`- ${strength}`, 18, y + i * 8);
       });
-      y = y + results.strengths.length * 8 + 8;
+      y += results.strengths.length * 8 + 10;
+
       doc.setFont('helvetica', 'bold');
-      doc.text('Growth Opportunities:', 14, y); y += 8;
+      doc.text('Development Areas:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      results.weaknesses.forEach((w: string, i: number) => {
-        doc.text(`- ${w}`, 18, y + i * 8);
-      });
-      y = y + results.weaknesses.length * 8 + 8;
-      doc.setFont('helvetica', 'bold');
-      doc.text('90-Day Roadmap:', 14, y); y += 8;
-      doc.setFont('helvetica', 'normal');
-      doc.text('First 30 Days:', 18, y); y += 8;
-      results.roadmap.thirty.forEach((item: string, i: number) => {
-        doc.text(`- ${item}`, 22, y + i * 8);
-      });
-      let y2 = y + results.roadmap.thirty.length * 8 + 4;
-      doc.text('Days 31-60:', 18, y2); y2 += 8;
-      results.roadmap.sixty.forEach((item: string, i: number) => {
-        doc.text(`- ${item}`, 22, y2 + i * 8);
-      });
-      y2 = y2 + results.roadmap.sixty.length * 8 + 4;
-      doc.text('Days 61-90:', 18, y2); y2 += 8;
-      results.roadmap.ninety.forEach((item: string, i: number) => {
-        doc.text(`- ${item}`, 22, y2 + i * 8);
+      results.weaknesses.forEach((weakness: string, i: number) => {
+        doc.text(`- ${weakness}`, 18, y + i * 8);
       });
 
-      await sendAssessmentResults({
-        email,
-        assessmentType: 'entrepreneurial-potential',
-        results,
-        pdfContent: doc
+      // Convert PDF to base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Send PDF via email
+      const response = await fetch('/api/assessment/send-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          assessmentType: 'entrepreneurial-potential',
+          pdfBuffer: pdfBase64
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
 
       setShowEmailModal(false);
-      toast.success('Results sent to your email successfully!');
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error('Failed to send email. Please try again.');
+      setEmailError('Failed to send email. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -742,22 +724,7 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
         currentModel,
         setCurrentModel,
         resetAssessment,
-        showEmailModal,
-        setShowEmailModal,
         handleSendToEmail,
-        handleEmailSend,
-        email,
-        setEmail,
-        emailError,
-        startAssessment: async (type: string) => {
-          // Implementation of startAssessment
-        },
-        completeAssessment: async (results: any) => {
-          // Implementation of completeAssessment
-        },
-        abandonAssessment: async (reason: string) => {
-          // Implementation of abandonAssessment
-        }
       }}
     >
       {children}
@@ -770,30 +737,59 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
               type="email"
               placeholder="Enter your email address"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               className="w-full p-2 border rounded-2xl mb-2"
               required
+              disabled={isSending}
             />
             {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
             <div className="flex justify-end space-x-2 mt-4">
               <button
                 onClick={() => setShowEmailModal(false)}
                 className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+                disabled={isSending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleEmailSend}
-                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition flex items-center gap-2"
+                disabled={isSending}
               >
-                Send
+                {isSending ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </>
+                ) : (
+                  'Send'
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in-up">
+          <CheckCircle className="h-5 w-5" />
+          <span>Results sent successfully!</span>
+        </div>
+      )}
     </AssessmentContext.Provider>
   );
+};
+
+export const useAssessment = () => {
+  const context = useContext(AssessmentContext);
+  if (context === undefined) {
+    throw new Error('useAssessment must be used within an AssessmentProvider');
+  }
+  return context;
 };
 
 // ===============================
@@ -1158,7 +1154,7 @@ const IndexPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 // 📝 Assessment Page
 // ===============================
 
-const AssessmentPage: React.FC<{ onComplete: (answers: Record<string, number>) => void; onBack: () => void }> = ({ onComplete, onBack }) => {
+const AssessmentPage: React.FC<{ onComplete: () => void; onBack: () => void }> = ({ onComplete, onBack }) => {
   const {
     addResponse,
     progress,
@@ -1178,28 +1174,21 @@ const AssessmentPage: React.FC<{ onComplete: (answers: Record<string, number>) =
   const handleResponseChange = (questionId: number, value: number, dimension: string) => {
     addResponse({ questionId, answer: value, dimension: dimension as any });
   };
-
   const getCurrentAnswer = (questionId: number) => {
     const response = responses.find(r => r.questionId === questionId);
     return response ? response.answer : undefined;
   };
-
   const handleNextPage = () => {
     if (currentQuestions.every(q => getCurrentAnswer(q.id) !== undefined)) {
       if (isLastPage) {
-        // Calculate results before completing
         calculateResults();
-        // Add a small delay to ensure results are calculated
-        setTimeout(() => {
-          onComplete(responses.reduce((acc, r) => ({ ...acc, [r.questionId.toString()]: r.answer }), {} as Record<string, number>));
-        }, 100);
+        onComplete();
       } else {
         setCurrentPage(currentPage + 1);
         window.scrollTo(0, 0);
       }
     }
   };
-
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
@@ -1372,11 +1361,9 @@ const AssessmentPage: React.FC<{ onComplete: (answers: Record<string, number>) =
 // ===============================
 
 const ResultsPage: React.FC<{ onRestart: () => void }> = ({ onRestart }) => {
-  const { 
-    results,
-    handleSendToEmail 
-  } = useAssessment();
-  const dimensionNames: { [key in Dimension]: string } = {
+  const { results, handleSendToEmail } = useAssessment();
+  if (!results) return null;
+  const dimensionNames: { [key: string]: string } = {
     riskTolerance: "Risk Tolerance",
     innovationMindset: "Innovation Mindset",
     executionGrit: "Execution & Grit",
@@ -1384,18 +1371,6 @@ const ResultsPage: React.FC<{ onRestart: () => void }> = ({ onRestart }) => {
     founderVision: "Founder Vision",
     solopreneurship: "Solopreneur Readiness"
   };
-
-  if (!results) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Loading Results...</h1>
-          <p className="text-gray-600">Please wait while we calculate your assessment results.</p>
-        </div>
-      </div>
-    );
-  }
-
   const getScoreColor = () => "text-black";
   const getDimensionWidth = (score: number): string => `${(score / 20) * 100}%`;
   const getDimensionColorClass = () => "bg-gray-700";
@@ -1501,8 +1476,8 @@ const ResultsPage: React.FC<{ onRestart: () => void }> = ({ onRestart }) => {
                 <CardTitle className="text-sm text-black">{dimensionNames[dimension]}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-black mb-2">{Number(score)}/20</div>
-                <Progress value={Number(score)} />
+                <div className="text-3xl font-bold text-black mb-2">{score}/20</div>
+                <Progress value={score} />
                 <p className="text-xs text-gray-500 mt-2">{dimensionNames[dimension]}</p>
               </CardContent>
             </Card>
@@ -1678,106 +1653,28 @@ const NotFoundPage: React.FC<{ onHome: () => void }> = ({ onHome }) => (
 type Page = 'index' | 'assessment' | 'results' | 'notfound';
 
 const EntrepreneurialPotential: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results'>('landing');
-  const [results, setResults] = useState<any>(null);
-  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
+  const [page, setPage] = React.useState<Page>('index');
+  const [key, setKey] = React.useState(0); // for resetting context
 
-  const handleStart = async () => {
-    try {
-      await startAssessment('entrepreneurial-potential');
-      setCurrentView('assessment');
-    } catch (error) {
-      console.error('Error starting assessment:', error);
-    }
-  };
-  
-  const handleQuizComplete = async (quizAnswers: Record<string, number>) => {
-    try {
-      const calculatedResults = {
-        totalScore: 85,
-        dimensions: {
-          riskTolerance: 80,
-          innovationMindset: 85,
-          executionGrit: 90,
-          scalabilityIQ: 75,
-          founderVision: 88,
-          solopreneurship: 82
-        },
-        rank: "High Potential",
-        persona: "Visionary Builder",
-        strengths: ["Strategic Thinking", "Risk Management"],
-        weaknesses: ["Operational Details"],
-        roadmap: {
-          thirty: ["Market Research", "MVP Development"],
-          sixty: ["Team Building", "Funding Strategy"],
-          ninety: ["Scale Operations", "Market Expansion"]
-        },
-        resources: {
-          books: ["The Lean Startup", "Zero to One"],
-          tools: ["Trello", "Stripe"],
-          courses: ["Startup Fundamentals", "Growth Hacking"]
-        }
-      };
-      
-      // Convert quizAnswers to array format for database
-      const answersArray = Object.entries(quizAnswers).map(([questionId, answer]) => ({
-        questionId: parseInt(questionId),
-        answer: answer,
-        dimension: assessmentQuestions.find(q => q.id === parseInt(questionId))?.dimension || ''
-      }));
-
-      // Prepare complete data for backend
-      const completeData = {
-        ...calculatedResults,
-        answers: answersArray,
-        assessmentType: 'entrepreneurial-potential',
-        status: 'completed',
-        progress: 100,
-        timeSpent: {
-          start: new Date().toISOString(),
-          end: new Date().toISOString()
-        }
-      };
-      
-      console.log('Data being saved to database:', completeData);
-      
-      // Send results to backend
-      await completeAssessment(completeData);
-      setResults(calculatedResults);
-      setCurrentView('results');
-    } catch (error) {
-      console.error('Error completing assessment:', error);
-    }
+  // Reset context when starting over
+  const handleRestart = () => {
+    setKey(prev => prev + 1);
+    setPage('index');
   };
 
-  const handleRestart = async () => {
-    try {
-      await abandonAssessment('User restarted assessment');
-      setResults(null);
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error restarting assessment:', error);
-    }
-  };
-
-  const handleBackToHome = async () => {
-    try {
-      await abandonAssessment('User returned to home');
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error returning to home:', error);
-    }
-  };
-
-  if (currentView === 'assessment') {
-    return <AssessmentPage onComplete={handleQuizComplete} onBack={handleBackToHome} />;
-  }
-  
-  if (currentView === 'results' && results) {
-    return <ResultsPage onRestart={handleRestart} />;
-  }
-  
-  return <IndexPage onStart={handleStart} />;
+  return (
+    <AssessmentProvider key={key}>
+      {page === 'index' && <IndexPage onStart={() => setPage('assessment')} />}
+      {page === 'assessment' && (
+        <AssessmentPage
+          onComplete={() => setPage('results')}
+          onBack={() => setPage('index')}
+        />
+      )}
+      {page === 'results' && <ResultsPage onRestart={handleRestart} />}
+      {page === 'notfound' && <NotFoundPage onHome={() => setPage('index')} />}
+    </AssessmentProvider>
+  );
 };
 
 export default EntrepreneurialPotential;

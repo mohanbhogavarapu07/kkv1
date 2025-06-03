@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, BarChart, Download, Mail, Share2, RefreshCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, BarChart, Download, Mail, Share2, RefreshCcw, CheckCircle } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { clsx, ClassValue } from "clsx";
 import { Button } from '@/components/ui/button';
@@ -8,9 +8,6 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import jsPDF from 'jspdf';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { sendAssessmentResults } from '@/services/emailService';
-import { toast } from 'sonner';
 
 // Utility to merge class names
 function cn(...inputs: ClassValue[]) {
@@ -216,27 +213,18 @@ const QuizSection = ({ onComplete, onBack }: QuizSectionProps) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const { updateProgress } = useAssessment();
 
   const handleAnswerSelect = (value: number) => setSelectedAnswer(value);
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (selectedAnswer !== null) {
-      const newAnswers = { ...answers, [questions[currentQuestion].id]: selectedAnswer };
-      setAnswers(newAnswers);
-      
-      // Update progress in backend
-      await updateProgress(
-        questions[currentQuestion].id,
-        selectedAnswer,
-        currentQuestion + 1
-      );
-
+      setAnswers(prev => ({ ...prev, [questions[currentQuestion].id]: selectedAnswer }));
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(prev => prev + 1);
         setSelectedAnswer(null);
       } else {
-        onComplete(newAnswers);
+        const finalAnswers = { ...answers, [questions[currentQuestion].id]: selectedAnswer };
+        onComplete(finalAnswers);
       }
     }
   };
@@ -338,9 +326,12 @@ const QuizSection = ({ onComplete, onBack }: QuizSectionProps) => {
 
 // Results Section Component
 const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
+  const [activeTab, setActiveTab] = useState("scores");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
@@ -428,69 +419,106 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
       return;
     }
 
+    setIsSending(true);
+    setEmailError("");
+
     try {
-      // Generate PDF content
+      // Generate PDF
       const doc = new jsPDF();
-      // Main Heading
-      doc.setFontSize(22);
+      let y = 20;
+
+      // Add content to PDF
       doc.setFont('helvetica', 'bold');
-      doc.text('Productivity Style Assessment', 105, 20, { align: 'center' });
-      // Subheading
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Summary', 14, 35);
-      // Body
-      doc.setFontSize(12);
+      doc.text('Productivity Style Quiz Results', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      doc.text(`Your Style: ${results.type}`, 14, 45);
-      doc.text(`Chronotype: ${results.chronotype}`, 14, 53);
-      doc.setFont('helvetica', 'italic');
-      doc.text(`"${results.description}"`, 14, 61, { maxWidth: 180 });
-      // Section Heading
+      doc.text(`Primary Style: ${results.type}`, 14, y); y += 10;
+      doc.text(`Chronotype: ${results.chronotype}`, 14, y); y += 10;
+      doc.text(`Style Description: ${results.description}`, 14, y); y += 20;
+
+      // Add scores
       doc.setFont('helvetica', 'bold');
-      doc.text('Style Breakdown:', 14, 75);
+      doc.text('Productivity Scores:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      let y = 83;
-      Object.entries(results.score).forEach(([style, score]) => {
-        doc.text(`- ${style}: ${score}%`, 18, y);
+      doc.text(`Cognitive Style: ${results.score.cognitive}%`, 18, y); y += 8;
+      doc.text(`Work Style: ${results.score.workStyle}%`, 18, y); y += 8;
+      doc.text(`Energy Management: ${results.score.energy}%`, 18, y); y += 8;
+      doc.text(`Focus Drivers: ${results.score.focus}%`, 18, y); y += 8;
+      doc.text(`Tool Usage: ${results.score.toolUsage}%`, 18, y); y += 20;
+
+      // Add strengths and challenges
+      doc.setFont('helvetica', 'bold');
+      doc.text('Strengths:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      results.strengths.forEach((strength: string) => {
+        doc.text(`- ${strength}`, 18, y);
         y += 8;
       });
-      // Strengths
+
+      y += 10;
       doc.setFont('helvetica', 'bold');
-      doc.text('Key Strengths:', 14, y + 4); y += 12;
+      doc.text('Challenges:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      results.strengths.forEach((s: string, i: number) => {
-        doc.text(`- ${s}`, 18, y + i * 8);
-      });
-      y = y + results.strengths.length * 8 + 8;
-      // Time Blocking
-      doc.setFont('helvetica', 'bold');
-      doc.text('Time Blocking Tips:', 14, y); y += 8;
-      doc.setFont('helvetica', 'normal');
-      results.timeBlocking.forEach((t: string, i: number) => {
-        doc.text(`- ${t}`, 18, y + i * 8);
-      });
-      y = y + results.timeBlocking.length * 8 + 8;
-      // Recommended Tools
-      doc.setFont('helvetica', 'bold');
-      doc.text('Recommended Tools:', 14, y); y += 8;
-      doc.setFont('helvetica', 'normal');
-      results.tools.forEach((t: string, i: number) => {
-        doc.text(`- ${t}`, 18, y + i * 8);
+      results.challenges.forEach((challenge: string) => {
+        doc.text(`- ${challenge}`, 18, y);
+        y += 8;
       });
 
-      await sendAssessmentResults({
-        email,
-        assessmentType: 'productivity-style',
-        results,
-        pdfContent: doc
+      // Add recommendations
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Recommended Time Blocking Strategies:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      results.timeBlocking.forEach((item: string) => {
+        doc.text(`- ${item}`, 18, y);
+        y += 8;
       });
+
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Recommended Tools:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      results.tools.forEach((tool: string) => {
+        doc.text(`- ${tool}`, 18, y);
+        y += 8;
+      });
+
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Recommended Habits:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      results.habits.forEach((habit: string) => {
+        doc.text(`- ${habit}`, 18, y);
+        y += 8;
+      });
+
+      // Convert PDF to base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Send PDF via email
+      const response = await fetch('/api/assessment/send-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          assessmentType: 'productivity-style',
+          pdfBuffer: pdfBase64
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
 
       setShowEmailModal(false);
-      toast.success('Results sent to your email successfully!');
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error('Failed to send email. Please try again.');
+      setEmailError('Failed to send email. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -647,23 +675,43 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
               onChange={handleEmailChange}
               className="w-full p-2 border rounded-2xl mb-2"
               required
+              disabled={isSending}
             />
             {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
             <div className="flex justify-end space-x-2 mt-4">
               <button
                 onClick={() => setShowEmailModal(false)}
                 className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+                disabled={isSending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleEmailSend}
-                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition flex items-center gap-2"
+                disabled={isSending}
               >
-                Send
+                {isSending ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </>
+                ) : (
+                  'Send'
+                )}
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in-up">
+          <CheckCircle className="h-5 w-5" />
+          <span>Results sent successfully!</span>
         </div>
       )}
     </div>
@@ -673,94 +721,43 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
 const ProductivityStyleQuiz = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results'>('landing');
   const [results, setResults] = useState<any>(null);
-  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
 
-  const handleStart = async () => {
-    try {
-      await startAssessment('productivity-style');
-      setCurrentView('assessment');
-    } catch (error) {
-      console.error('Error starting assessment:', error);
-      // Handle error appropriately
-    }
-  };
+  const handleStart = () => setCurrentView('assessment');
   
-  const handleQuizComplete = async (quizAnswers: Record<string, number>) => {
-    try {
-      // Calculate results based on answers
-      const calculatedResults = {
-        type: "Strategic Planner",
-        chronotype: "Early Bird",
-        description: "You excel at planning and executing tasks in a structured manner.",
-        timeBlocking: ["Morning deep work", "Afternoon meetings", "Evening review"],
-        tools: ["Notion", "Todoist", "Forest"],
-        habits: ["Morning planning", "Daily review", "Weekly reflection"],
-        strengths: ["Organization", "Planning", "Focus"],
-        challenges: ["Flexibility", "Spontaneity"],
-        compatibility: {
-          works_well_with: ["Executors", "Analysts"],
-          challenges_with: ["Spontaneous Creatives"]
-        },
-        score: {
-          cognitive: 85,
-          workStyle: 90,
-          energy: 75,
-          focus: 88,
-          toolUsage: 82
-        }
-      };
-      
-      // Convert quizAnswers to array format for database
-      const answersArray = Object.entries(quizAnswers).map(([questionId, answer]) => ({
-        questionId: parseInt(questionId),
-        answer: answer,
-        dimension: questions.find(q => q.id === parseInt(questionId))?.category || ''
-      }));
-
-      // Prepare complete data for backend
-      const completeData = {
-        ...calculatedResults,
-        answers: answersArray,
-        assessmentType: 'productivity-style',
-        status: 'completed',
-        progress: 100,
-        timeSpent: {
-          start: new Date().toISOString(),
-          end: new Date().toISOString()
-        }
-      };
-      
-      console.log('Data being saved to database:', completeData);
-      
-      // Send results to backend
-      await completeAssessment(completeData);
-      setResults(calculatedResults);
-      setCurrentView('results');
-    } catch (error) {
-      console.error('Error completing assessment:', error);
-    }
+  const handleQuizComplete = (quizAnswers: Record<string, number>) => {
+    // Calculate results based on answers
+    const calculatedResults = {
+      type: "Strategic Planner",
+      chronotype: "Early Bird",
+      description: "You excel at planning and executing tasks in a structured manner.",
+      timeBlocking: ["Morning deep work", "Afternoon meetings", "Evening review"],
+      tools: ["Notion", "Todoist", "Forest"],
+      habits: ["Morning planning", "Daily review", "Weekly reflection"],
+      strengths: ["Organization", "Planning", "Focus"],
+      challenges: ["Flexibility", "Spontaneity"],
+      compatibility: {
+        works_well_with: ["Executors", "Analysts"],
+        challenges_with: ["Spontaneous Creatives"]
+      },
+      score: {
+        cognitive: 85,
+        workStyle: 90,
+        energy: 75,
+        focus: 88,
+        toolUsage: 82
+      }
+    };
+    
+    setResults(calculatedResults);
+    setCurrentView('results');
   };
 
-  const handleRestart = async () => {
-    try {
-      await abandonAssessment('User restarted assessment');
-      setResults(null);
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error restarting assessment:', error);
-      // Handle error appropriately
-    }
+  const handleRestart = () => {
+    setResults(null);
+    setCurrentView('landing');
   };
 
-  const handleBackToHome = async () => {
-    try {
-      await abandonAssessment('User returned to home');
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error returning to home:', error);
-      // Handle error appropriately
-    }
-  };
+  const handleBackToHome = () => setCurrentView('landing');
 
   if (currentView === 'assessment') {
     return <QuizSection onComplete={handleQuizComplete} onBack={handleBackToHome} />;

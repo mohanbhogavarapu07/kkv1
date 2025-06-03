@@ -6,7 +6,6 @@ import subscriberRoutes from './routes/subscriberRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import assessmentRoutes from './routes/assessmentRoutes.js';
-import emailRoutes from './routes/emailRoutes.js';
 
 const app = express();
 
@@ -42,7 +41,6 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/assessment', assessmentRoutes);
-app.use('/api/email', emailRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

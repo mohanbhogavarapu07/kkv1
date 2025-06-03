@@ -66,11 +66,28 @@ const Assessments = () => {
     e.preventDefault();
     
     try {
-      // Save user data to localStorage
-      localStorage.setItem('userName', formData.name);
-      localStorage.setItem('userAge', formData.age);
-      localStorage.setItem('userGender', formData.gender);
+      // Save assessment data
+      const response = await fetch('http://localhost:5000/api/assessment/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          gender: formData.gender,
+          age: formData.age,
+          assessmentType: currentAssessment,
+          attempted: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error('Failed to save assessment data');
+      }
+
+      const data = await response.json();
       setShowModal(false);
       
       // Navigate to assessment after form submission
@@ -168,6 +185,7 @@ const Assessments = () => {
                   required
                 />
               </div>
+
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">Age</label>
                 <select
@@ -184,7 +202,7 @@ const Assessments = () => {
                   <option value="35 to 44">35 to 44</option>
                   <option value="45 to 54">45 to 54</option>
                   <option value="55 to 64">55 to 64</option>
-                  <option value="65+">65+</option>
+                  <option value="65 or over">65 or over</option>
                 </select>
               </div>
               <div className="mb-4">
@@ -199,7 +217,7 @@ const Assessments = () => {
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
-                  <option value="others">Others</option>
+                  <option value="other">other</option>
                 </select>
               </div>
               <div className="flex justify-end space-x-2">

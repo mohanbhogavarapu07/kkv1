@@ -1,13 +1,10 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, BarChart, Download, Mail, Share2, RefreshCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, BarChart, Download, Mail, Share2, RefreshCcw, CheckCircle } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import jsPDF from 'jspdf';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { sendAssessmentResults } from '@/services/emailService';
-import { toast } from 'react-hot-toast';
 
 interface AssessmentResults {
   style: string;
@@ -264,9 +261,12 @@ const QuizSection = ({ onComplete, onBack }: { onComplete: (answers: Record<stri
 
 // Results Section Component
 const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
+  const [activeTab, setActiveTab] = useState("scores");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
@@ -328,60 +328,78 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
       return;
     }
 
+    setIsSending(true);
+    setEmailError("");
+
     try {
-      // Generate PDF content
+      // Generate PDF
       const doc = new jsPDF();
-      // Main Heading
-      doc.setFontSize(22);
+      let y = 20;
+
+      // Add content to PDF
       doc.setFont('helvetica', 'bold');
-      doc.text('Leadership Assessment Results', 105, 20, { align: 'center' });
-      // Subheading
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Summary', 14, 35);
-      // Body
-      doc.setFontSize(12);
+      doc.text('Leadership Assessment Results', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      doc.text(`Leadership Style: ${results.style}`, 14, 45);
-      doc.setFont('helvetica', 'italic');
-      doc.text(`"${results.description}"`, 14, 53, { maxWidth: 180 });
-      // Section Heading
+      doc.text(`Leadership Style: ${results.style}`, 14, y); y += 10;
+      doc.text(`Description: ${results.description}`, 14, y); y += 20;
+
+      // Add competency scores
       doc.setFont('helvetica', 'bold');
-      doc.text('Scores:', 14, 67);
+      doc.text('Competency Scores:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      let y = 75;
-      Object.entries(results.scores).forEach(([category, score]) => {
-        doc.text(`- ${category}: ${score}%`, 18, y);
+      Object.entries(results.scores).forEach(([competency, score]) => {
+        doc.text(`- ${competency}: ${score}/100`, 18, y);
         y += 8;
       });
-      // Strengths
+
+      // Add strengths
+      y += 10;
       doc.setFont('helvetica', 'bold');
-      doc.text('Strengths:', 14, y + 4); y += 12;
+      doc.text('Key Strengths:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      results.strengths.forEach((s: string, i: number) => {
-        doc.text(`- ${s}`, 18, y + i * 8);
-      });
-      y = y + results.strengths.length * 8 + 8;
-      // Development Areas
-      doc.setFont('helvetica', 'bold');
-      doc.text('Development Areas:', 14, y); y += 8;
-      doc.setFont('helvetica', 'normal');
-      results.developmentAreas.forEach((d: string, i: number) => {
-        doc.text(`- ${d}`, 18, y + i * 8);
+      results.strengths.forEach((strength: string) => {
+        doc.text(`- ${strength}`, 18, y);
+        y += 8;
       });
 
-      await sendAssessmentResults({
-        email,
-        assessmentType: 'leadership-archetype',
-        results,
-        pdfContent: doc
+      // Add development areas
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Development Areas:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      results.developmentAreas.forEach((area: string) => {
+        doc.text(`- ${area}`, 18, y);
+        y += 8;
       });
+
+      // Convert PDF to base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Send PDF via email
+      const response = await fetch('/api/assessment/send-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          assessmentType: 'leadership-archetype',
+          pdfBuffer: pdfBase64
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
 
       setShowEmailModal(false);
-      toast.success('Results sent to your email successfully!');
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error('Failed to send email. Please try again.');
+      setEmailError('Failed to send email. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -491,23 +509,44 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
               onChange={handleEmailChange}
               className="w-full p-2 border rounded-2xl mb-2"
               required
+              disabled={isSending}
             />
             {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
             <div className="flex justify-end space-x-2 mt-4">
               <button
                 onClick={() => setShowEmailModal(false)}
                 className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+                disabled={isSending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleEmailSend}
-                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition flex items-center gap-2"
+                disabled={isSending}
               >
-                Send
+                {isSending ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </>
+                ) : (
+                  'Send'
+                )}
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in-up">
+          <CheckCircle className="h-5 w-5" />
+          <span>Results sent successfully!</span>
         </div>
       )}
     </div>
@@ -632,226 +671,52 @@ const HomePage = ({ onStart }: { onStart: () => void }) => (
 );
 
 const LeadershipAssessment = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results'>('landing');
-  const [results, setResults] = useState<any>(null);
-  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
+  const [currentView, setCurrentView] = useState<'intro' | 'quiz' | 'results'>('intro');
+  const [results, setResults] = useState<AssessmentResults | null>(null);
 
-  const questions = [
-    {
-      id: 1,
-      category: "Vision & Strategy",
-      text: "I can clearly articulate a compelling vision for my team's future.",
-    },
-    {
-      id: 2,
-      category: "Communication",
-      text: "I actively listen to my team members and value their input.",
-    },
-    {
-      id: 3,
-      category: "Decision Making",
-      text: "I make decisions confidently while considering team input.",
-    },
-    {
-      id: 4,
-      category: "Team Building",
-      text: "I actively work to build trust and collaboration within my team.",
-    },
-    {
-      id: 5,
-      category: "Adaptability",
-      text: "I can quickly adapt my leadership style to different situations.",
-    },
-    {
-      id: 6,
-      category: "Emotional Intelligence",
-      text: "I am aware of and can manage my emotions effectively in challenging situations.",
-    },
-    {
-      id: 7,
-      category: "Innovation",
-      text: "I encourage creative thinking and new ideas from my team.",
-    },
-    {
-      id: 8,
-      category: "Accountability",
-      text: "I take responsibility for both successes and failures.",
-    },
-    {
-      id: 9,
-      category: "Development",
-      text: "I actively mentor and develop my team members.",
-    },
-    {
-      id: 10,
-      category: "Strategic Thinking",
-      text: "I can see the bigger picture and plan for long-term success.",
-    },
-    {
-      id: 11,
-      category: "Vision & Strategy",
-      text: "I regularly communicate the organization's goals and how they align with our vision.",
-    },
-    {
-      id: 12,
-      category: "Communication",
-      text: "I provide clear and constructive feedback to help team members improve.",
-    },
-    {
-      id: 13,
-      category: "Decision Making",
-      text: "I gather relevant information before making important decisions.",
-    },
-    {
-      id: 14,
-      category: "Team Building",
-      text: "I create opportunities for team members to collaborate and learn from each other.",
-    },
-    {
-      id: 15,
-      category: "Adaptability",
-      text: "I remain calm and focused when facing unexpected challenges.",
-    },
-    {
-      id: 16,
-      category: "Emotional Intelligence",
-      text: "I can sense and respond appropriately to others' emotions.",
-    },
-    {
-      id: 17,
-      category: "Innovation",
-      text: "I create a safe environment for team members to experiment and take risks.",
-    },
-    {
-      id: 18,
-      category: "Accountability",
-      text: "I hold myself and others accountable for meeting commitments.",
-    },
-    {
-      id: 19,
-      category: "Development",
-      text: "I identify and nurture potential in team members.",
-    },
-    {
-      id: 20,
-      category: "Strategic Thinking",
-      text: "I anticipate potential challenges and plan accordingly.",
-    },
-    {
-      id: 21,
-      category: "Vision & Strategy",
-      text: "I help team members understand how their work contributes to larger goals.",
-    },
-    {
-      id: 22,
-      category: "Communication",
-      text: "I adapt my communication style to different audiences and situations.",
-    },
-    {
-      id: 23,
-      category: "Decision Making",
-      text: "I consider multiple perspectives before making important decisions.",
-    },
-    {
-      id: 24,
-      category: "Team Building",
-      text: "I recognize and celebrate team achievements.",
-    },
-    {
-      id: 25,
-      category: "Adaptability",
-      text: "I embrace change and help others navigate through it.",
-    }
-  ];
-
-  const handleStart = async () => {
-    try {
-      await startAssessment('leadership-archetype');
-      setCurrentView('assessment');
-    } catch (error) {
-      console.error('Error starting assessment:', error);
-      // Handle error appropriately
-    }
-  };
-  
-  const handleQuizComplete = async (quizAnswers: Record<string, number>) => {
-    try {
-      // Calculate results based on answers
-      const calculatedResults = {
-        type: "Transformational Leader",
-        description: "You excel at inspiring and motivating others through vision and personal connection.",
-        strengths: ["Vision Setting", "Team Development", "Strategic Thinking"],
-        challenges: ["Operational Details", "Conflict Resolution"],
-        score: {
-          vision: 85,
-          communication: 90,
-          decisionMaking: 75,
-          teamBuilding: 88,
-          adaptability: 82
-        }
-      };
-      
-      // Convert quizAnswers to array format for database
-      const answersArray = Object.entries(quizAnswers).map(([questionId, answer]) => ({
-        questionId: parseInt(questionId),
-        answer: answer,
-        dimension: questions.find(q => q.id === parseInt(questionId))?.category || ''
-      }));
-
-      // Prepare complete data for backend
-      const completeData = {
-        ...calculatedResults,
-        answers: answersArray,
-        assessmentType: 'leadership-archetype',
-        status: 'completed',
-        progress: 100,
-        timeSpent: {
-          start: new Date().toISOString(),
-          end: new Date().toISOString()
-        }
-      };
-      
-      console.log('Data being saved to database:', completeData);
-      
-      // Send results to backend
-      await completeAssessment(completeData);
-      setResults(calculatedResults);
-      setCurrentView('results');
-    } catch (error) {
-      console.error('Error completing assessment:', error);
-    }
+  const handleQuizComplete = (answers: Record<string, number>) => {
+    // Calculate results based on answers
+    const calculatedResults: AssessmentResults = {
+      style: "Transformational Leader",
+      description: "You demonstrate strong abilities in inspiring and motivating others while driving innovation and change.",
+      scores: {
+        "Vision & Strategy": 85,
+        "Communication": 90,
+        "Decision Making": 80,
+        "Team Building": 88,
+        "Adaptability": 82
+      },
+      strengths: [
+        "Strong communication skills",
+        "Excellent team building abilities",
+        "Strategic thinking",
+        "Emotional intelligence"
+      ],
+      developmentAreas: [
+        "Risk-taking in decision making",
+        "Conflict resolution",
+        "Time management"
+      ]
+    };
+    
+    setResults(calculatedResults);
+    setCurrentView('results');
   };
 
-  const handleRestart = async () => {
-    try {
-      await abandonAssessment('User restarted assessment');
-      setResults(null);
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error restarting assessment:', error);
-      // Handle error appropriately
-    }
+  const handleRestart = () => {
+    setResults(null);
+    setCurrentView('intro');
   };
 
-  const handleBackToHome = async () => {
-    try {
-      await abandonAssessment('User returned to home');
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error returning to home:', error);
-      // Handle error appropriately
-    }
-  };
-
-  if (currentView === 'assessment') {
-    return <QuizSection onComplete={handleQuizComplete} onBack={handleBackToHome} />;
+  if (currentView === 'intro') {
+    return <IntroductionPage onStart={() => setCurrentView('quiz')} />;
   }
-  
+
   if (currentView === 'results' && results) {
     return <ResultsSection results={results} onRestart={handleRestart} />;
   }
-  
-  return <IntroductionPage onStart={handleStart} />;
+
+  return <QuizSection onComplete={handleQuizComplete} onBack={() => setCurrentView('intro')} />;
 };
 
 export default LeadershipAssessment; 

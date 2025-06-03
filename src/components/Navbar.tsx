@@ -16,7 +16,6 @@ const Navbar = () => {
     { name: "About", path: "/about" },
     { name: "Insights", path: "/insights" },
     // Tools will be handled as a dropdown
-    { name: "Contact", path: "/contact" },
   ];
 
   const toolsItems = [
@@ -113,6 +112,15 @@ const Navbar = () => {
               </div>
             )}
           </div>
+          <Link
+            to="/contact"
+            className={cn(
+              "font-inter uppercase text-xs tracking-widest transition-all hover:text-gray-500 hover:underline underline-offset-4",
+              location.pathname === "/contact" ? "font-medium" : "font-normal"
+            )}
+          >
+            Contact
+          </Link>
         </div>
         
         {/* Mobile Menu Button */}
@@ -171,6 +179,16 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+            <Link
+              to="/contact"
+              onClick={() => setIsMenuOpen(false)}
+              className={cn(
+                "font-inter uppercase text-sm tracking-widest transition-all hover:underline underline-offset-4",
+                location.pathname === "/contact" ? "font-medium" : "font-normal"
+              )}
+            >
+              Contact
+            </Link>
           </div>
         </div>
       )}

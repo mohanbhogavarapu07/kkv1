@@ -27,17 +27,19 @@ const Footer = () => {
             <Link to="/contact" className="hover:text-gray-500 transition-colors">
               Contact
             </Link>
-            <Link to="/terms" className="hover:text-gray-500 transition-colors">
-              Terms and Conditions
-            </Link>
-            <Link to="/privacy" className="hover:text-gray-500 transition-colors">
-              Privacy & Policies
-            </Link>
           </div>
         </div>
         
-        <div className="mt-8 pt-8 border-t border-gray-200 text-center md:text-left text-xs text-gray-500">
-          <p>© {currentYear} Krishna Kumar. All rights reserved.</p>
+        <div className="mt-8 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-gray-500 font-playfair">© {currentYear} Krishna Kumar. All rights reserved.</p>
+          <div className="flex gap-4 text-xs text-gray-500">
+            <Link to="/terms" className="hover:text-gray-700 transition-colors font-playfair">
+              Terms and Conditions
+            </Link>
+            <Link to="/privacy" className="hover:text-gray-700 transition-colors font-playfair">
+              Privacy & Policies
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

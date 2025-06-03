@@ -4,9 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import jsPDF from 'jspdf';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import EmailModal from '@/components/EmailModal';
-import { sendAssessmentResults } from '@/services/emailService';
 
 // =========================
 // Types & Data
@@ -257,13 +254,13 @@ const calculateResults = (answers: Record<number, number>): AssessmentResults =>
 const scaleLabels = ["Never", "Rarely", "Sometimes", "Often", "Always"];
 
 interface AssessmentQuizProps {
-  onComplete: (answers: Record<number, number>) => void;
+  onComplete: (results: AssessmentResults) => void;
   onBack: () => void;
 }
 
 const AssessmentQuiz = ({ onComplete, onBack }: AssessmentQuizProps) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
   const handleAnswerSelect = (value: number) => setSelectedAnswer(value);
@@ -276,7 +273,8 @@ const AssessmentQuiz = ({ onComplete, onBack }: AssessmentQuizProps) => {
         setSelectedAnswer(null);
       } else {
         const finalAnswers = { ...answers, [questions[currentQuestion].id]: selectedAnswer };
-        onComplete(finalAnswers);
+        const results = calculateResults(finalAnswers);
+        onComplete(results);
       }
     }
   };
@@ -397,8 +395,117 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
     return 'w-36 h-36';
   };
 
+  const [activeTab, setActiveTab] = useState("scores");
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [pdfContent, setPdfContent] = useState<jsPDF | null>(null);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setEmailError("");
+  };
+
+  const handleEmailSend = async () => {
+    if (!email.match(/^\S+@\S+\.\S+$/)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+
+    setIsSending(true);
+    setEmailError("");
+
+    try {
+      // Generate PDF
+      const doc = new jsPDF();
+      let y = 20;
+
+      // Add content to PDF
+      doc.setFont('helvetica', 'bold');
+      doc.text('Burnout Risk Assessment Results', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total Score: ${results.totalScore}`, 14, y); y += 10;
+      doc.text(`Burnout Phase: ${results.phase.name}`, 14, y); y += 10;
+      doc.text(`Description: ${results.phase.description}`, 14, y); y += 20;
+
+      // Add subscores
+      doc.setFont('helvetica', 'bold');
+      doc.text('Dimension Scores:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      Object.entries(results.subscores).forEach(([dimension, score]) => {
+        doc.text(`- ${dimension}: ${score}/20`, 18, y);
+        y += 8;
+      });
+
+      // Add root causes
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Root Causes:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      results.rootCauses.forEach((cause: string, i: number) => {
+        doc.text(`- ${cause}`, 18, y + i * 8);
+      });
+
+      // Add recovery blueprint
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Recovery Blueprint:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Daily Actions:', 18, y); y += 8;
+      doc.setFont('helvetica', 'normal');
+      results.recoveryBlueprint.daily.forEach((action: string, i: number) => {
+        doc.text(`- ${action}`, 22, y + i * 8);
+      });
+
+      y += 4;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Weekly Actions:', 18, y); y += 8;
+      doc.setFont('helvetica', 'normal');
+      results.recoveryBlueprint.weekly.forEach((action: string, i: number) => {
+        doc.text(`- ${action}`, 22, y + i * 8);
+      });
+
+      y += 4;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Supplements:', 18, y); y += 8;
+      doc.setFont('helvetica', 'normal');
+      results.recoveryBlueprint.supplements.forEach((supplement: string, i: number) => {
+        doc.text(`- ${supplement}`, 22, y + i * 8);
+      });
+
+      // Convert PDF to base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Send PDF via email
+      const response = await fetch('/api/assessment/send-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          assessmentType: 'burnout-risk',
+          pdfBuffer: pdfBase64
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      setShowEmailModal(false);
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setEmailError('Failed to send email. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
@@ -457,27 +564,7 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
     results.recoveryBlueprint.supplements.forEach((item: string, i: number) => {
       doc.text(`- ${item}`, 22, y2 + i * 8);
     });
-    setPdfContent(doc);
     doc.save('burnout-risk-assessment-results.pdf');
-  };
-
-  const handleSendToEmail = () => {
-    if (!pdfContent) {
-      handleDownloadResults();
-    }
-    setShowEmailModal(true);
-  };
-
-  const handleEmailSend = async (email: string) => {
-    if (!pdfContent) {
-      throw new Error('PDF content not available');
-    }
-    await sendAssessmentResults({
-      email,
-      assessmentType: 'burnout-risk',
-      results,
-      pdfContent
-    });
   };
 
   return (
@@ -651,19 +738,65 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
           <Button
             variant="outline"
             className="px-4 py-2 text-base min-w-[120px] bg-white text-black border-black hover:bg-gray-100 transition-colors flex items-center"
-            onClick={handleSendToEmail}
+            onClick={() => setShowEmailModal(true)}
           >
             <Mail className="w-5 h-5 mr-2" />
             Send to Email
           </Button>
         </div>
 
-        <EmailModal
-          isOpen={showEmailModal}
-          onClose={() => setShowEmailModal(false)}
-          onSend={handleEmailSend}
-          title="Send Burnout Risk Assessment Results"
-        />
+        {/* Email Modal */}
+        {showEmailModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+              <h2 className="text-xl font-bold mb-4">Send Results to Email</h2>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={handleEmailChange}
+                className="w-full p-2 border rounded-2xl mb-2"
+                required
+                disabled={isSending}
+              />
+              {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
+              <div className="flex justify-end space-x-2 mt-4">
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+                  disabled={isSending}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEmailSend}
+                  className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition flex items-center gap-2"
+                  disabled={isSending}
+                >
+                  {isSending ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in-up">
+            <CheckCircle className="h-5 w-5" />
+            <span>Results sent successfully!</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -749,83 +882,39 @@ function Introduction({ onStart }: IntroductionProps) {
 
 const BurnoutRiskAssessment = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results'>('landing');
-  const [results, setResults] = useState<any>(null);
-  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
+  const [results, setResults] = useState<AssessmentResults | null>(null);
 
-  const handleStart = async () => {
-    try {
-      await startAssessment('burnout-risk');
-      setCurrentView('assessment');
-    } catch (error) {
-      console.error('Error starting assessment:', error);
-      // Handle error appropriately
-    }
-  };
-  
-  const handleQuizComplete = async (answers: Record<number, number>) => {
-    try {
-      const results = calculateResults(answers);
-      
-      // Convert answers to array format for database
-      const answersArray = Object.entries(answers).map(([questionId, answer]) => ({
-        questionId: parseInt(questionId),
-        answer: answer,
-        dimension: questions.find(q => q.id === parseInt(questionId))?.category || ''
-      }));
-
-      // Prepare complete data for backend
-      const completeData = {
-        ...results,
-        answers: answersArray,
-        assessmentType: 'burnout-risk',
-        status: 'completed',
-        progress: 100,
-        timeSpent: {
-          start: new Date().toISOString(),
-          end: new Date().toISOString()
-        }
-      };
-      
-      console.log('Data being saved to database:', completeData);
-      
-      // Send results to backend
-      await completeAssessment(completeData);
-      setResults(results);
-      setCurrentView('results');
-    } catch (error) {
-      console.error('Error completing assessment:', error);
-    }
+  const handleStart = () => {
+    setCurrentView('assessment');
   };
 
-  const handleRestart = async () => {
-    try {
-      await abandonAssessment('User restarted assessment');
-      setResults(null);
+  const handleBack = () => {
+    if (currentView === 'assessment') {
       setCurrentView('landing');
-    } catch (error) {
-      console.error('Error restarting assessment:', error);
-      // Handle error appropriately
     }
   };
 
-  const handleBackToHome = async () => {
-    try {
-      await abandonAssessment('User returned to home');
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error returning to home:', error);
-    }
+  const handleComplete = (assessmentResults: AssessmentResults) => {
+    setResults(assessmentResults);
+    setCurrentView('results');
   };
 
-  if (currentView === 'assessment') {
-    return <AssessmentQuiz onComplete={handleQuizComplete} onBack={handleBackToHome} />;
-  }
-  
-  if (currentView === 'results' && results) {
-    return <ResultsDashboard results={results} onRetake={handleRestart} />;
-  }
-  
-  return <Introduction onStart={handleStart} />;
+  const handleRetake = () => {
+    setResults(null);
+    setCurrentView('landing');
+  };
+
+  return (
+    <>
+      {currentView === 'landing' && <Introduction onStart={handleStart} />}
+      {currentView === 'assessment' && (
+        <AssessmentQuiz onComplete={handleComplete} onBack={handleBack} />
+      )}
+      {currentView === 'results' && results && (
+        <ResultsDashboard results={results} onRetake={handleRetake} />
+      )}
+    </>
+  );
 };
 
 export default BurnoutRiskAssessment; 

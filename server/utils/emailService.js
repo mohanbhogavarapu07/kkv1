@@ -97,7 +97,7 @@ const sendContactFormEmail = async (contactDetails) => {
   }
 };
 
-export const sendAssessmentResultsEmail = async ({ to, name, assessmentType, results, pdfBase64 }) => {
+export const sendAssessmentResultsEmail = async ({ to, name, assessmentType, results }) => {
   try {
     const assessmentNames = {
       'entrepreneurial-potential': 'Entrepreneurial Potential Assessment',
@@ -112,12 +112,44 @@ export const sendAssessmentResultsEmail = async ({ to, name, assessmentType, res
     const assessmentName = assessmentNames[assessmentType] || assessmentType;
 
     const emailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <p style="color: #444; line-height: 1.6;">Dear ${name},</p>
-        <p style="color: #444; line-height: 1.6;">Please find your ${assessmentName} results attached to this email.</p>
-        <p style="color: #444; line-height: 1.6;">Best regards,<br>Your Assessment Team</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Your ${assessmentName} Results</h2>
+        <p>Dear ${name},</p>
+        <p>Thank you for completing the ${assessmentName}. Here are your results:</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          ${results}
+        </div>
+        <p>If you have any questions about your results, please don't hesitate to reach out.</p>
+        <p>Best regards,<br>Your Assessment Team</p>
       </div>
     `;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to,
+      subject: `Your ${assessmentName} Results`,
+      html: emailContent
+    });
+    return true;
+  } catch (error) {
+    console.error('Error sending assessment results email:', error);
+    return false;
+  }
+};
+
+export const sendAssessmentPDFEmail = async ({ to, assessmentType, pdfBuffer }) => {
+  try {
+    const assessmentNames = {
+      'entrepreneurial-potential': 'Entrepreneurial Potential Assessment',
+      'productivity-style': 'Productivity Style Quiz',
+      'emotional-intelligence': 'Emotional Intelligence (EQ) Evaluator',
+      'resilience-score': 'Resilience Score Analyzer',
+      'leadership-archetype': 'Leadership Archetype Assessment',
+      'burnout-risk': 'Burnout Risk Assessment',
+      'mental-fitness-index': 'Mental Fitness Index'
+    };
+
+    const assessmentName = assessmentNames[assessmentType] || assessmentType;
 
     const mailOptions = {
       from: {
@@ -126,17 +158,26 @@ export const sendAssessmentResultsEmail = async ({ to, name, assessmentType, res
       },
       to,
       subject: `Your ${assessmentName} Results`,
-      html: emailContent,
-      attachments: [{
-        filename: `${assessmentType}-results.pdf`,
-        content: Buffer.from(pdfBase64, 'base64')
-      }]
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #333;">Your ${assessmentName} Results</h2>
+          <p>Thank you for completing the ${assessmentName}. Please find your detailed results attached to this email.</p>
+          <p>If you have any questions about your results, please don't hesitate to reach out.</p>
+          <p>Best regards,<br>Your Assessment Team</p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: `${assessmentType}-results.pdf`,
+          content: pdfBuffer
+        }
+      ]
     };
 
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending assessment results email:', error);
+    console.error('Error sending assessment PDF email:', error);
     return false;
   }
 };

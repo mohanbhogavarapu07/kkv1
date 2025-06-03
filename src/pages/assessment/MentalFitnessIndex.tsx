@@ -2,10 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Brain as BrainIcon, Lightbulb as LightbulbIcon, Target, Zap, TrendingUp, RotateCcw, Calendar, Clock, CheckCircle, Download, Mail, ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import jsPDF from 'jspdf';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { sendAssessmentResults } from '@/services/emailService';
-import { toast } from 'sonner';
-
 
 // =========================
 // Utilities
@@ -403,60 +399,122 @@ function AssessmentQuiz({ onComplete, onBack }: { onComplete: (results: any) => 
   );
 }
 
-function ResultsDashboard({ results, onViewTraining, onRetakeAssessment }: { results: any; onViewTraining: () => void; onRetakeAssessment: () => void; }) {
+interface MentalFitnessResultsType {
+  mfiScore: number;
+  category: string;
+  description: string;
+  mvo2Score: number;
+  recoveryIndex: number;
+  focusEndurance: number;
+  taskAgility: number;
+  categoryScores: { [key: string]: number };
+  strengths: string[];
+  weaknesses: string[];
+  recommendedMode: string;
+  modeDescription: string;
+  totalScore: number;
+  fitnessLevel: string;
+  primaryStyle: string;
+  secondaryStyle: string;
+  subscores: {
+    cognitiveAgility: number;
+    emotionalResilience: number;
+    socialConnection: number;
+    purposeMeaning: number;
+  };
+  developmentAreas: string[];
+}
+
+function MentalFitnessResults({ results, onRetakeQuiz }: { results: MentalFitnessResultsType; onRetakeQuiz: () => void }) {
+  const [activeTab, setActiveTab] = useState("scores");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    // Main Heading
-    doc.setFontSize(22);
+    let y = 20;
+
+    // Header
+    doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Mental Fitness Index Results', 105, 20, { align: 'center' });
-    // Subheading
+    doc.text('Mental Fitness Index Results', 105, y, { align: 'center' });
+    y += 15;
+
+    // Main Score
+    doc.setFontSize(36);
+    doc.text(results.mfiScore.toString(), 105, y, { align: 'center' });
+    y += 15;
+
+    // Category
     doc.setFontSize(16);
+    doc.text(results.category, 105, y, { align: 'center' });
+    y += 10;
+
+    // Description
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'italic');
+    doc.text(results.description, 105, y, { align: 'center', maxWidth: 180 });
+    y += 20;
+
+    // Key Metrics
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 14, 35);
-    // Body
+    doc.text('Key Metrics', 14, y);
+    y += 10;
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`MFI Score: ${results.mfiScore}`, 14, 45);
-    doc.text(`Category: ${results.category}`, 14, 53);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`"${results.description}"`, 14, 61, { maxWidth: 180 });
-    // Section Heading
+    doc.text(`Mental VO₂ Max: ${results.mvo2Score}`, 14, y); y += 8;
+    doc.text(`Recovery Index: ${results.recoveryIndex}/10`, 14, y); y += 8;
+    doc.text(`Focus Endurance: ${results.focusEndurance}%`, 14, y); y += 8;
+    doc.text(`Task Agility: ${results.taskAgility}%`, 14, y); y += 15;
+
+    // Category Scores
     doc.setFont('helvetica', 'bold');
-    doc.text('Scores:', 14, 75);
+    doc.text('Category Scores', 14, y);
+    y += 10;
     doc.setFont('helvetica', 'normal');
-    let y = 83;
-    doc.text(`- Mental VO₂ Max: ${results.mvo2Score}`, 18, y); y += 8;
-    doc.text(`- Recovery Index: ${results.recoveryIndex}/10`, 18, y); y += 8;
-    doc.text(`- Focus Endurance: ${results.focusEndurance}%`, 18, y); y += 8;
-    doc.text(`- Task Agility: ${results.taskAgility}%`, 18, y); y += 8;
+    Object.entries(results.categoryScores).forEach(([category, score]) => {
+      doc.text(`${category}: ${score}%`, 14, y);
+      y += 8;
+    });
+    y += 10;
+
     // Strengths
     doc.setFont('helvetica', 'bold');
-    doc.text('Strengths:', 14, y + 4); y += 12;
+    doc.text('Key Strengths', 14, y);
+    y += 8;
     doc.setFont('helvetica', 'normal');
-    results.strengths.forEach((s: string, i: number) => {
-      doc.text(`- ${s}`, 18, y + i * 8);
+    results.strengths.forEach((strength: string) => {
+      doc.text(`• ${strength}`, 14, y);
+      y += 8;
     });
-    y = y + results.strengths.length * 8 + 8;
+    y += 5;
+
     // Growth Opportunities
     doc.setFont('helvetica', 'bold');
-    doc.text('Growth Opportunities:', 14, y); y += 8;
+    doc.text('Growth Opportunities', 14, y);
+    y += 8;
     doc.setFont('helvetica', 'normal');
-    results.weaknesses.forEach((w: string, i: number) => {
-      doc.text(`- ${w}`, 18, y + i * 8);
+    results.weaknesses.forEach((weakness: string) => {
+      doc.text(`• ${weakness}`, 14, y);
+      y += 8;
     });
-    y = y + results.weaknesses.length * 8 + 8;
+    y += 5;
+
     // Recommended Mode
     doc.setFont('helvetica', 'bold');
-    doc.text('Recommended Mode:', 14, y); y += 8;
+    doc.text('Recommended Mode', 14, y);
+    y += 8;
     doc.setFont('helvetica', 'normal');
-    doc.text(`${results.recommendedMode}`, 18, y); y += 8;
+    doc.text(results.recommendedMode, 14, y);
+    y += 8;
     doc.setFont('helvetica', 'italic');
-    doc.text(`${results.modeDescription}`, 18, y, { maxWidth: 180 });
+    doc.text(results.modeDescription, 14, y, { maxWidth: 180 });
+
     doc.save('mental-fitness-results.pdf');
   };
 
@@ -477,61 +535,81 @@ function ResultsDashboard({ results, onViewTraining, onRetakeAssessment }: { res
       return;
     }
 
+    setIsSending(true);
+    setEmailError("");
+
     try {
-      // Generate PDF content
+      // Generate PDF
       const doc = new jsPDF();
-      // Main Heading
-      doc.setFontSize(22);
+      let y = 20;
+
+      // Add content to PDF
       doc.setFont('helvetica', 'bold');
-      doc.text('Mental Fitness Index Assessment', 105, 20, { align: 'center' });
-      // Subheading
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Summary', 14, 35);
-      // Body
-      doc.setFontSize(12);
+      doc.text('Mental Fitness Index Results', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      doc.text(`Overall Score: ${results.mfiScore}%`, 14, 45);
-      doc.text(`Fitness Level: ${results.category}`, 14, 53);
+      doc.text(`MFI Score: ${results.mfiScore}`, 14, y); y += 10;
+      doc.text(`Category: ${results.category}`, 14, y); y += 10;
       doc.setFont('helvetica', 'italic');
-      doc.text(`"${results.description}"`, 14, 61, { maxWidth: 180 });
-      // Section Heading
-      doc.setFont('helvetica', 'bold');
-      doc.text('Category Scores:', 14, 75);
+      doc.text(`"${results.description}"`, 14, y, { maxWidth: 180 }); y += 10;
       doc.setFont('helvetica', 'normal');
-      let y = 83;
-      Object.entries(results.categoryScores).forEach(([category, score]) => {
-        doc.text(`- ${category}: ${score}%`, 18, y);
-        y += 8;
+      doc.text(`Mental VO₂ Max: ${results.mvo2Score}`, 14, y); y += 10;
+      doc.text(`Recovery Index: ${results.recoveryIndex}/10`, 14, y); y += 10;
+      doc.text(`Focus Endurance: ${results.focusEndurance}%`, 14, y); y += 10;
+      doc.text(`Task Agility: ${results.taskAgility}%`, 14, y); y += 20;
+
+      // Add strengths and weaknesses
+      doc.setFont('helvetica', 'bold');
+      doc.text('Strengths:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      results.strengths.forEach((strength: string, i: number) => {
+        doc.text(`- ${strength}`, 18, y + i * 8);
       });
-      // Strengths
+      y += results.strengths.length * 8 + 10;
+
       doc.setFont('helvetica', 'bold');
-      doc.text('Key Strengths:', 14, y + 4); y += 12;
+      doc.text('Growth Opportunities:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      results.strengths.forEach((s: string, i: number) => {
-        doc.text(`- ${s}`, 18, y + i * 8);
+      results.weaknesses.forEach((weakness: string, i: number) => {
+        doc.text(`- ${weakness}`, 18, y + i * 8);
       });
-      y = y + results.strengths.length * 8 + 8;
-      // Areas for Growth
+      y += results.weaknesses.length * 8 + 10;
+
+      // Add recommended mode
       doc.setFont('helvetica', 'bold');
-      doc.text('Areas for Growth:', 14, y); y += 8;
+      doc.text('Recommended Mode:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      results.weaknesses.forEach((a: string, i: number) => {
-        doc.text(`- ${a}`, 18, y + i * 8);
+      doc.text(`${results.recommendedMode}`, 14, y); y += 10;
+      doc.setFont('helvetica', 'italic');
+      doc.text(`${results.modeDescription}`, 14, y, { maxWidth: 180 });
+
+      // Convert PDF to base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Send PDF via email
+      const response = await fetch('/api/assessment/send-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          assessmentType: 'mental-fitness-index',
+          pdfBuffer: pdfBase64
+        }),
       });
 
-      await sendAssessmentResults({
-        email,
-        assessmentType: 'mental-fitness-index',
-        results,
-        pdfContent: doc
-      });
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
 
       setShowEmailModal(false);
-      toast.success('Results sent to your email successfully!');
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error('Failed to send email. Please try again.');
+      setEmailError('Failed to send email. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -667,11 +745,7 @@ function ResultsDashboard({ results, onViewTraining, onRetakeAssessment }: { res
           </CardContent>
         </Card>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button onClick={onViewTraining} className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center">
-            View Your 12-Week Training Program
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-          <Button onClick={onRetakeAssessment} className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center">
+          <Button onClick={onRetakeQuiz} className="px-4 py-2 text-base min-w-[120px] bg-white text-black border border-black hover:bg-gray-100 transition-colors inline-flex items-center">
             <RefreshCcw className="w-5 h-5 mr-2" />
             Retake Assessment
           </Button>
@@ -697,23 +771,44 @@ function ResultsDashboard({ results, onViewTraining, onRetakeAssessment }: { res
               onChange={handleEmailChange}
               className="w-full p-2 border rounded-2xl mb-2"
               required
+              disabled={isSending}
             />
             {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
             <div className="flex justify-end space-x-2 mt-4">
               <button
                 onClick={() => setShowEmailModal(false)}
                 className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+                disabled={isSending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleEmailSend}
-                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+                className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition flex items-center gap-2"
+                disabled={isSending}
               >
-                Send
+                {isSending ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </>
+                ) : (
+                  'Send'
+                )}
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in-up">
+          <CheckCircle className="h-5 w-5" />
+          <span>Results sent successfully!</span>
         </div>
       )}
     </div>
@@ -929,110 +1024,23 @@ function Introduction({ onStart }: { onStart: () => void }) {
   );
 }
 
-interface AssessmentResults {
-  overallScore: number;
-  dimensions: {
-    cognitive: number;
-    emotional: number;
-    physical: number;
-    social: number;
-  };
-  strengths: string[];
-  areasForGrowth: string[];
-}
-
-const MentalFitnessIndex: React.FC = () => {
+const MentalFitnessIndexPage = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results' | 'training'>('landing');
-  const [results, setResults] = useState<AssessmentResults | null>(null);
-  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
-
-  const handleStart = async () => {
-    try {
-      await startAssessment('mental-fitness');
-      setCurrentView('assessment');
-    } catch (error) {
-      console.error('Error starting assessment:', error);
-    }
+  const [assessmentResults, setAssessmentResults] = useState<any>(null);
+  const handleAssessmentComplete = (results: any) => {
+    setAssessmentResults(results);
+    setCurrentView('results');
   };
-  
-  const handleQuizComplete = async (quizAnswers: Record<string, number>) => {
-    try {
-      const calculatedResults: AssessmentResults = {
-        overallScore: 85,
-        dimensions: {
-          cognitive: 88,
-          emotional: 82,
-          physical: 85,
-          social: 85
-        },
-        strengths: ["Focus", "Stress Management"],
-        areasForGrowth: ["Sleep Quality", "Work-Life Balance"]
-      };
-      
-      // Convert quizAnswers to array format for database
-      const answersArray = Object.entries(quizAnswers).map(([questionId, answer]) => ({
-        questionId: parseInt(questionId),
-        answer: answer,
-        dimension: questions.find(q => q.id === parseInt(questionId))?.category || ''
-      }));
-
-      // Log the complete data being sent to verify all fields
-      const completeData = {
-        ...calculatedResults,
-        answers: answersArray,
-        assessmentType: 'mental-fitness',
-        status: 'completed',
-        progress: 100,
-        timeSpent: {
-          start: new Date().toISOString(),
-          end: new Date().toISOString()
-        }
-      };
-      
-      console.log('Data being saved to database:', completeData);
-      
-      // Send results to backend with answers array
-      await completeAssessment(completeData);
-      
-      setResults(calculatedResults);
-      setCurrentView('results');
-    } catch (error) {
-      console.error('Error completing assessment:', error);
-    }
-  };
-
-  const handleRestart = async () => {
-    try {
-      await abandonAssessment('User restarted assessment');
-      setResults(null);
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error restarting assessment:', error);
-    }
-  };
-
-  const handleBackToHome = async () => {
-    try {
-      await abandonAssessment('User returned to home');
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error returning to home:', error);
-    }
-  };
-
   if (currentView === 'assessment') {
-    return <AssessmentQuiz onComplete={handleQuizComplete} onBack={handleBackToHome} />;
+    return <AssessmentQuiz onComplete={handleAssessmentComplete} onBack={() => setCurrentView('landing')} />;
   }
-  
-  if (currentView === 'results' && results) {
-    return <ResultsDashboard results={results} onViewTraining={() => setCurrentView('training')} onRetakeAssessment={handleRestart} />;
+  if (currentView === 'results' && assessmentResults) {
+    return <MentalFitnessResults results={assessmentResults} onRetakeQuiz={() => setCurrentView('assessment')} />;
   }
-
-  if (currentView === 'training' && results) {
-    return <TrainingProgram results={results} onBack={() => setCurrentView('results')} />;
+  if (currentView === 'training' && assessmentResults) {
+    return <TrainingProgram results={assessmentResults} onBack={() => setCurrentView('results')} />;
   }
-  
-  return <Introduction onStart={handleStart} />;
+  return <Introduction onStart={() => setCurrentView('assessment')} />;
 };
 
-export default MentalFitnessIndex; 
+export default MentalFitnessIndexPage; 

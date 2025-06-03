@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   TrendingUp,
   Brain,
@@ -18,9 +18,6 @@ import {
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import BaseAssessment from '@/components/BaseAssessment';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { sendAssessmentResults } from '@/services/emailService';
-import { toast } from 'sonner';
 
 // =====================================
 // 🧾 TYPES & LOGIC
@@ -50,12 +47,6 @@ interface Question {
   reverse?: boolean;
   text: string;
   category: string;
-}
-
-interface AssessmentUser {
-  name: string;
-  email: string;
-  gender: string;
 }
 
 const roleModels = {
@@ -308,84 +299,86 @@ function TabsContent({ value: contentValue, value: currentValue, children, class
 // =====================================
 function HeroSection({ onStartQuiz }: { onStartQuiz: () => void }) {
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-black mb-4">
-          Resilience Blueprint Index
-        </h1>
-        <p className="text-lg text-gray-700 mb-6">
-          Discover your resilience, grit, and recovery potential
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gray-100 rounded-full">
-              <Brain className="h-6 w-6 text-black" />
+    <BaseAssessment assessmentType="resilience-score">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-black mb-4">
+              Resilience Blueprint Index
+          </h1>
+          <p className="text-lg text-gray-700 mb-6">
+              Discover your resilience, grit, and recovery potential
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-black">What is Resilience?</h3>
-          </div>
-          <p className="text-gray-700">
-            Resilience is your ability to bounce back from setbacks, adapt to change, and keep going in the face of adversity. This assessment measures your resilience strengths and growth opportunities.
-          </p>
-        </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gray-100 rounded-full">
-              <Lightbulb className="h-6 w-6 text-black" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gray-100 rounded-full">
+                  <Brain className="h-6 w-6 text-black" />
+                </div>
+              <h3 className="text-lg font-semibold text-black">What is Resilience?</h3>
             </div>
-            <h3 className="text-lg font-semibold text-black">What You'll Learn</h3>
-          </div>
+            <p className="text-gray-700">
+              Resilience is your ability to bounce back from setbacks, adapt to change, and keep going in the face of adversity. This assessment measures your resilience strengths and growth opportunities.
+                  </p>
+                </div>
+
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gray-100 rounded-full">
+                  <Lightbulb className="h-6 w-6 text-black" />
+                </div>
+              <h3 className="text-lg font-semibold text-black">What You'll Learn</h3>
+                </div>
+            <ul className="space-y-2 text-gray-700">
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-black" />
+                Your resilience score and profile
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-black" />
+                Areas of strength and growth
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-black" />
+                Personalized recommendations
+              </li>
+            </ul>
+              </div>
+            </div>
+
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-8">
+          <h3 className="text-lg font-semibold text-black mb-4">About This Assessment</h3>
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-black" />
-              Your resilience score and profile
-            </li>
+                    Takes approximately 5-7 minutes to complete
+                </li>
             <li className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-black" />
-              Areas of strength and growth
-            </li>
+                    Includes 20 questions across 4 resilience dimensions
+                </li>
             <li className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-black" />
-              Personalized recommendations
-            </li>
-          </ul>
-        </div>
-      </div>
+                    Provides detailed feedback and personalized recommendations
+                </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-black" />
+                    Your responses are completely private and confidential
+                </li>
+              </ul>
+            </div>
 
-      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-8">
-        <h3 className="text-lg font-semibold text-black mb-4">About This Assessment</h3>
-        <ul className="space-y-2 text-gray-700">
-          <li className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-black" />
-            Takes approximately 5-7 minutes to complete
-          </li>
-          <li className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-black" />
-            Includes 20 questions across 4 resilience dimensions
-          </li>
-          <li className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-black" />
-            Provides detailed feedback and personalized recommendations
-          </li>
-          <li className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-black" />
-            Your responses are completely private and confidential
-          </li>
-        </ul>
+        <div className="text-center">
+          <button
+              onClick={onStartQuiz}
+              className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105 text-lg"
+            >
+              Begin Assessment
+          </button>
+          </div>
       </div>
-
-      <div className="text-center">
-        <button
-          onClick={onStartQuiz}
-          className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-8 rounded-full shadow-md transition-all hover:scale-105 text-lg"
-        >
-          Begin Assessment
-        </button>
-      </div>
-    </div>
+    </BaseAssessment>
   );
 }
 
@@ -531,7 +524,7 @@ const scaleLabels = [
   "Strongly Agree",
 ];
 
-function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: ResilienceResults, answers: Record<number, number>) => void, onBack: () => void }) {
+function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: ResilienceResults) => void, onBack: () => void }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -545,7 +538,7 @@ function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: Resilien
       setCurrentQuestion((prev) => prev + 1);
     } else {
       const results = calculateResilienceScore(answers, questions);
-      onComplete(results, answers);
+      onComplete(results);
     }
   };
 
@@ -559,80 +552,82 @@ function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: Resilien
   const currentAnswer = answers[currentQ.id];
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <Button onClick={onBack} className="text-gray-500 hover:text-black hover:bg-gray-100 bg-transparent inline-flex items-center px-1 py-3">
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
-        <div className="flex items-center gap-3">
-          <Brain className="w-6 h-6 text-black" />
-          <span className="text-xl font-semibold text-black">
-            Resilience Assessment
-          </span>
-        </div>
-        <span className="text-sm font-medium text-black">
-          Question {currentQuestion + 1} of {questions.length}
-        </span>
-      </div>
-
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-3">
+    <BaseAssessment assessmentType="resilience-score">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <Button onClick={onBack} className="text-gray-500 hover:text-black hover:bg-gray-100 bg-transparent inline-flex items-center px-1 py-3">
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+          <div className="flex items-center gap-3">
+            <Brain className="w-6 h-6 text-black" />
+            <span className="text-xl font-semibold text-black">
+              Resilience Assessment
+            </span>
+          </div>
           <span className="text-sm font-medium text-black">
-            {Math.round(progress)}% Complete
+            Question {currentQuestion + 1} of {questions.length}
           </span>
         </div>
-        <Progress value={progress} />
-      </div>
-      <Card className="bg-white border-2 border-gray-200 mb-8 text-black">
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="px-3 py-1 bg-gray-100 rounded-full">
-              <span className="text-black text-sm font-medium">
-                {currentQ.category}
-              </span>
+
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-medium text-black">
+              {Math.round(progress)}% Complete
+            </span>
+          </div>
+          <Progress value={progress} />
+        </div>
+        <Card className="bg-white border-2 border-gray-200 mb-8 text-black">
+          <CardHeader>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="px-3 py-1 bg-gray-100 rounded-full">
+                <span className="text-black text-sm font-medium">
+                  {currentQ.category}
+                </span>
+              </div>
             </div>
-          </div>
-          <CardTitle className="text-2xl font-semibold text-black leading-relaxed">
-            {currentQ.text}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {scaleLabels.map((label, idx) => (
-              <label
-                key={idx}
-                className={`w-full p-4 rounded-lg border-2 text-left flex items-center justify-between cursor-pointer ${
-                  currentAnswer === idx + 1
-                    ? "border-black bg-gray-100"
-                    : "border-gray-200 bg-white"
-                }`}
-              >
-                <span className="font-medium text-black">{label}</span>
-                <input
-                  type="radio"
-                  name={`q${currentQ.id}`}
-                  value={idx + 1}
-                  checked={currentAnswer === idx + 1}
-                  onChange={() => handleAnswer(currentQ.id, idx + 1)}
-                  className="form-radio h-4 w-4 text-black border-gray-300 focus:ring-black"
-                />
-              </label>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      <div className="flex justify-between">
-        <Button onClick={handlePrevious} disabled={currentQuestion === 0} className="border-black text-black hover:bg-gray-100 disabled:text-gray-300 disabled:border-gray-300 bg-white inline-flex items-center px-6 py-3">
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Previous
-        </Button>
-        <Button onClick={handleNext} disabled={currentAnswer == null} className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3">
-          {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </Button>
+            <CardTitle className="text-2xl font-semibold text-black leading-relaxed">
+              {currentQ.text}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {scaleLabels.map((label, idx) => (
+                <label
+                  key={idx}
+                  className={`w-full p-4 rounded-lg border-2 text-left flex items-center justify-between cursor-pointer ${
+                    currentAnswer === idx + 1
+                      ? "border-black bg-gray-100"
+                      : "border-gray-200 bg-white"
+                  }`}
+                >
+                  <span className="font-medium text-black">{label}</span>
+                  <input
+                    type="radio"
+                    name={`q${currentQ.id}`}
+                    value={idx + 1}
+                    checked={currentAnswer === idx + 1}
+                    onChange={() => handleAnswer(currentQ.id, idx + 1)}
+                    className="form-radio h-4 w-4 text-black border-gray-300 focus:ring-black"
+                  />
+                </label>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <div className="flex justify-between">
+          <Button onClick={handlePrevious} disabled={currentQuestion === 0} className="border-black text-black hover:bg-gray-100 disabled:text-gray-300 disabled:border-gray-300 bg-white inline-flex items-center px-6 py-3">
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Previous
+          </Button>
+          <Button onClick={handleNext} disabled={currentAnswer == null} className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-300 inline-flex items-center px-6 py-3">
+            {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
       </div>
-    </div>
+    </BaseAssessment>
   );
 }
 
@@ -650,6 +645,8 @@ function ResilienceResults({
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const getScoreColor = (score: number) => {
     if (score >= 20) return 'text-green-400';
@@ -677,43 +674,63 @@ function ResilienceResults({
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    // Main Heading
-    doc.setFontSize(22);
+    let y = 20;
+
+    // Header
+    doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Resilience Assessment Results', 105, 20, { align: 'center' });
-    // Subheading
+    doc.text('Resilience Assessment Results', 105, y, { align: 'center' });
+    y += 15;
+
+    // Main Score
+    doc.setFontSize(36);
+    doc.text(results.totalScore.toString(), 105, y, { align: 'center' });
+    y += 15;
+
+    // Tier
     doc.setFontSize(16);
+    doc.text(results.tier, 105, y, { align: 'center' });
+    y += 10;
+
+    // Archetype
+    doc.setFontSize(14);
+    doc.text(`Resilience Archetype: ${results.archetype}`, 105, y, { align: 'center' });
+    y += 15;
+
+    // Scores Section
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 14, 35);
-    // Body
+    doc.text('Dimension Scores', 14, y);
+    y += 10;
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Total Score: ${results.totalScore}`, 14, 45);
-    doc.text(`Tier: ${results.tier}`, 14, 53);
-    doc.text(`Archetype: ${results.archetype}`, 14, 61);
-    doc.text(`Burnout Risk: ${results.burnoutRisk}`, 14, 69);
-    // Section Heading
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dimension Scores:', 14, 83);
-    doc.setFont('helvetica', 'normal');
-    let y = 91;
-    doc.text(`- Emotional Endurance: ${results.subscores.emotional}/25`, 18, y); y += 8;
-    doc.text(`- Grit & Perseverance: ${results.subscores.grit}/25`, 18, y); y += 8;
-    doc.text(`- Cognitive Flexibility: ${results.subscores.cognitive}/25`, 18, y); y += 8;
-    doc.text(`- Optimism & Recovery: ${results.subscores.optimism}/25`, 18, y); y += 8;
+    doc.text(`Emotional Endurance: ${results.subscores.emotional}/25`, 14, y); y += 8;
+    doc.text(`Grit & Perseverance: ${results.subscores.grit}/25`, 14, y); y += 8;
+    doc.text(`Cognitive Flexibility: ${results.subscores.cognitive}/25`, 14, y); y += 8;
+    doc.text(`Optimism & Recovery: ${results.subscores.optimism}/25`, 14, y); y += 15;
+
     // Role Model
     doc.setFont('helvetica', 'bold');
-    doc.text('Role Model:', 14, y + 4); y += 12;
+    doc.text('Your Role Model', 14, y);
+    y += 8;
     doc.setFont('helvetica', 'normal');
-    doc.text(`${results.roleModel.name}`, 18, y); y += 8;
+    doc.text(results.roleModel.name, 14, y);
+    y += 8;
     doc.setFont('helvetica', 'italic');
-    doc.text(`"${results.roleModel.description}"`, 18, y, { maxWidth: 180 }); y += 12;
+    doc.text(results.roleModel.description, 14, y, { maxWidth: 180 });
+    y += 15;
+
+    // Key Lessons
     doc.setFont('helvetica', 'bold');
-    doc.text('Key Lessons:', 14, y); y += 8;
+    doc.text('Key Lessons', 14, y);
+    y += 8;
     doc.setFont('helvetica', 'normal');
-    results.roleModel.lessons.forEach((lesson: string, i: number) => {
-      doc.text(`- ${lesson}`, 18, y + i * 8);
+    results.roleModel.lessons.forEach((lesson: string) => {
+      doc.text(`• ${lesson}`, 14, y);
+      y += 8;
     });
+
     doc.save('resilience-assessment-results.pdf');
   };
 
@@ -734,61 +751,74 @@ function ResilienceResults({
       return;
     }
 
+    setIsSending(true);
+    setEmailError("");
+
     try {
-      // Generate PDF content
+      // Generate PDF
       const doc = new jsPDF();
-      // Main Heading
-      doc.setFontSize(22);
+      let y = 20;
+
+      // Add content to PDF
       doc.setFont('helvetica', 'bold');
-      doc.text('Resilience Score Analysis', 105, 20, { align: 'center' });
-      // Subheading
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Summary', 14, 35);
-      // Body
-      doc.setFontSize(12);
+      doc.text('Resilience Assessment Results', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      doc.text(`Overall Score: ${results.totalScore}%`, 14, 45);
-      doc.text(`Resilience Level: ${results.tier}`, 14, 53);
+      doc.text(`Total Score: ${results.totalScore}`, 14, y); y += 10;
+      doc.text(`Resilience Tier: ${results.tier}`, 14, y); y += 10;
+      doc.text(`Archetype: ${results.archetype}`, 14, y); y += 10;
+      doc.text(`Burnout Risk: ${results.burnoutRisk}`, 14, y); y += 20;
+
+      // Add dimension scores
+      doc.setFont('helvetica', 'bold');
+      doc.text('Dimension Scores:', 14, y); y += 10;
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Emotional Endurance: ${results.subscores.emotional}/25`, 18, y); y += 8;
+      doc.text(`Grit & Perseverance: ${results.subscores.grit}/25`, 18, y); y += 8;
+      doc.text(`Cognitive Flexibility: ${results.subscores.cognitive}/25`, 18, y); y += 8;
+      doc.text(`Optimism & Recovery: ${results.subscores.optimism}/25`, 18, y); y += 20;
+
+      // Add role model section
+      doc.setFont('helvetica', 'bold');
+      doc.text('Role Model:', 14, y + 4); y += 12;
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${results.roleModel.name}`, 18, y); y += 8;
       doc.setFont('helvetica', 'italic');
-      doc.text(`"${results.archetype}"`, 14, 61, { maxWidth: 180 });
-      // Section Heading
+      doc.text(`"${results.roleModel.description}"`, 18, y, { maxWidth: 180 }); y += 12;
       doc.setFont('helvetica', 'bold');
-      doc.text('Category Scores:', 14, 75);
+      doc.text('Key Lessons:', 14, y); y += 8;
       doc.setFont('helvetica', 'normal');
-      let y = 83;
-      Object.entries(results.subscores).forEach(([category, score]) => {
-        doc.text(`- ${category}: ${score}%`, 18, y);
-        y += 8;
-      });
-      // Strengths
-      doc.setFont('helvetica', 'bold');
-      doc.text('Key Strengths:', 14, y + 4); y += 12;
-      doc.setFont('helvetica', 'normal');
-      results.roleModel.lessons.forEach((s: string, i: number) => {
-        doc.text(`- ${s}`, 18, y + i * 8);
-      });
-      y = y + results.roleModel.lessons.length * 8 + 8;
-      // Areas for Growth
-      doc.setFont('helvetica', 'bold');
-      doc.text('Areas for Growth:', 14, y); y += 8;
-      doc.setFont('helvetica', 'normal');
-      results.roleModel.lessons.forEach((a: string, i: number) => {
-        doc.text(`- ${a}`, 18, y + i * 8);
+      results.roleModel.lessons.forEach((lesson: string, i: number) => {
+        doc.text(`- ${lesson}`, 18, y + i * 8);
       });
 
-      await sendAssessmentResults({
-        email,
-        assessmentType: 'resilience-score',
-        results,
-        pdfContent: doc
+      // Convert PDF to base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Send PDF via email
+      const response = await fetch('/api/assessment/send-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          assessmentType: 'resilience-score',
+          pdfBuffer: pdfBase64
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
 
       setShowEmailModal(false);
-      toast.success('Results sent to your email successfully!');
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error('Failed to send email. Please try again.');
+      setEmailError('Failed to send email. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -1162,23 +1192,44 @@ function ResilienceResults({
                 onChange={handleEmailChange}
                 className="w-full p-2 border rounded-2xl mb-2"
                 required
+                disabled={isSending}
               />
               {emailError && <div className="text-red-500 text-sm mb-2">{emailError}</div>}
               <div className="flex justify-end space-x-2 mt-4">
                 <button
                   onClick={() => setShowEmailModal(false)}
                   className="px-4 py-2 border rounded-2xl hover:bg-gray-100 transition"
+                  disabled={isSending}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEmailSend}
-                  className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition"
+                  className="px-4 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition flex items-center gap-2"
+                  disabled={isSending}
                 >
-                  Send
+                  {isSending ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send'
+                  )}
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in-up">
+            <CheckCircle className="h-5 w-5" />
+            <span>Results sent successfully!</span>
           </div>
         )}
       </div>
@@ -1190,83 +1241,34 @@ function ResilienceResults({
 // 🎯 MAIN COMPONENT
 // =====================================
 const ResilienceScoreAnalyzer = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'results'>('landing');
+  const [step, setStep] = useState<'hero' | 'quiz' | 'results'>('hero');
   const [results, setResults] = useState<ResilienceResults | null>(null);
-  const { startAssessment, completeAssessment, abandonAssessment } = useAssessment();
 
-  const handleStart = async () => {
-    try {
-      await startAssessment('resilience-score');
-      setCurrentView('assessment');
-    } catch (error) {
-      console.error('Error starting assessment:', error);
-      // Handle error appropriately
-    }
-  };
-  
-  const handleQuizComplete = async (results: ResilienceResults, answers: Record<number, number>) => {
-    try {
-      // Convert answers to array format for database
-      const answersArray = Object.entries(answers).map(([questionId, answer]) => ({
-        questionId: parseInt(questionId),
-        answer: answer,
-        dimension: questions.find(q => q.id === parseInt(questionId))?.dimension || ''
-      }));
-
-      // Prepare complete data for backend
-      const completeData = {
-        ...results,
-        answers: answersArray,
-        assessmentType: 'resilience-score',
-        status: 'completed',
-        progress: 100,
-        timeSpent: {
-          start: new Date().toISOString(),
-          end: new Date().toISOString()
-        }
-      };
-      
-      console.log('Data being saved to database:', completeData);
-      
-      // Send results to backend
-      await completeAssessment(completeData);
-      setResults(results);
-      setCurrentView('results');
-    } catch (error) {
-      console.error('Error completing assessment:', error);
-    }
-  };
-
-  const handleRestart = async () => {
-    try {
-      await abandonAssessment('User restarted assessment');
-      setResults(null);
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error restarting assessment:', error);
-      // Handle error appropriately
-    }
-  };
-
-  const handleBackToHome = async () => {
-    try {
-      await abandonAssessment('User returned to home');
-      setCurrentView('landing');
-    } catch (error) {
-      console.error('Error returning to home:', error);
-      // Handle error appropriately
-    }
-  };
-
-  if (currentView === 'assessment') {
-    return <ResilienceQuiz onComplete={handleQuizComplete} onBack={handleBackToHome} />;
-  }
-  
-  if (currentView === 'results' && results) {
-    return <ResilienceResults results={results} onRetakeQuiz={handleRestart} />;
-  }
-  
-  return <HeroSection onStartQuiz={handleStart} />;
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {step === "hero" && (
+        <HeroSection onStartQuiz={() => setStep("quiz")} />
+      )}
+      {step === "quiz" && (
+        <ResilienceQuiz
+          onComplete={(res) => {
+            setResults(res);
+            setStep("results");
+          }}
+          onBack={() => setStep("hero")}
+        />
+      )}
+      {step === "results" && results && (
+        <ResilienceResults
+          results={results}
+          onRetakeQuiz={() => {
+            setResults(null);
+            setStep("quiz");
+          }}
+        />
+      )}
+    </div>
+  );
 };
 
 export default ResilienceScoreAnalyzer; 
