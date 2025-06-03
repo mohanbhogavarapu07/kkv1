@@ -644,64 +644,83 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
     try {
       // Generate PDF
       const doc = new jsPDF();
-      let y = 20;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      let y = margin;
 
-      // Add content to PDF
+      // Header
+      doc.setFontSize(24);
       doc.setFont('helvetica', 'bold');
-      doc.text('Entrepreneurial Potential Assessment Results', 14, y); y += 10;
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Total Score: ${results.totalScore}`, 14, y); y += 10;
-      doc.text(`Rank: ${results.rank}`, 14, y); y += 10;
-      doc.text(`Persona: ${results.persona}`, 14, y); y += 20;
+      doc.text('Entrepreneurial Potential Results', pageWidth / 2, y, { align: 'center' });
+      y += 20;
 
-      // Add dimension scores
-      doc.setFont('helvetica', 'bold');
-      doc.text('Dimension Scores:', 14, y); y += 10;
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Innovation: ${results.dimensions.innovationMindset}/20`, 18, y); y += 8;
-      doc.text(`Risk Management: ${results.dimensions.riskTolerance}/20`, 18, y); y += 8;
-      doc.text(`Resourcefulness: ${results.dimensions.scalabilityIQ}/20`, 18, y); y += 8;
-      doc.text(`Market Awareness: ${results.dimensions.founderVision}/20`, 18, y); y += 20;
+      // Main Score
+      doc.setFontSize(36);
+      doc.text(results.totalScore.toString(), pageWidth / 2, y, { align: 'center' });
+      y += 20;
 
-      // Add strengths and development areas
+      // Profile
+      doc.setFontSize(16);
+      doc.text(results.persona, pageWidth / 2, y, { align: 'center' });
+      y += 15;
+
+      // Description
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'italic');
+      const descriptionLines = doc.splitTextToSize(results.rank, pageWidth - (2 * margin));
+      doc.text(descriptionLines, pageWidth / 2, y, { align: 'center' });
+      y += 10 + (descriptionLines.length * 7);
+
+      // Category Scores
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('Key Strengths:', 14, y); y += 10;
+      doc.text('Category Scores', margin, y);
+      y += 15;
+
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      results.strengths.forEach((strength: string, i: number) => {
-        doc.text(`- ${strength}`, 18, y + i * 8);
+      Object.entries(results.dimensions).forEach(([dimension, score]) => {
+        doc.text(`${dimension}: ${score}/20`, margin, y);
+        y += 10;
       });
-      y += results.strengths.length * 8 + 10;
+      y += 10;
 
-      doc.setFont('helvetica', 'bold');
-      doc.text('Development Areas:', 14, y); y += 10;
-      doc.setFont('helvetica', 'normal');
-      results.weaknesses.forEach((weakness: string, i: number) => {
-        doc.text(`- ${weakness}`, 18, y + i * 8);
-      });
-
-      // Convert PDF to base64
-      const pdfBase64 = doc.output('datauristring').split(',')[1];
-
-      // Send PDF via email
-      const response = await fetch('/api/assessment/send-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          assessmentType: 'entrepreneurial-potential',
-          pdfBuffer: pdfBase64
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send email');
+      // Check if we need a new page
+      if (y > doc.internal.pageSize.getHeight() - 60) {
+        doc.addPage();
+        y = margin;
       }
 
-      setShowEmailModal(false);
-      setShowSuccessMessage(true);
-      setTimeout(() => setShowSuccessMessage(false), 3000);
+      // Strengths
+      doc.setFont('helvetica', 'bold');
+      doc.text('Key Strengths', margin, y);
+      y += 15;
+      doc.setFont('helvetica', 'normal');
+      results.strengths.forEach((strength: string) => {
+        const strengthLines = doc.splitTextToSize(`• ${strength}`, pageWidth - (2 * margin));
+        doc.text(strengthLines, margin, y);
+        y += 10 * strengthLines.length;
+      });
+      y += 10;
+
+      // Check if we need a new page
+      if (y > doc.internal.pageSize.getHeight() - 60) {
+        doc.addPage();
+        y = margin;
+      }
+
+      // Development Areas
+      doc.setFont('helvetica', 'bold');
+      doc.text('Growth Opportunities', margin, y);
+      y += 15;
+      doc.setFont('helvetica', 'normal');
+      results.weaknesses.forEach((weakness: string) => {
+        const weaknessLines = doc.splitTextToSize(`• ${weakness}`, pageWidth - (2 * margin));
+        doc.text(weaknessLines, margin, y);
+        y += 10 * weaknessLines.length;
+      });
+
+      doc.save('entrepreneurial-potential-results.pdf');
     } catch (error) {
       console.error('Error sending email:', error);
       setEmailError('Failed to send email. Please try again.');
@@ -1377,63 +1396,82 @@ const ResultsPage: React.FC<{ onRestart: () => void }> = ({ onRestart }) => {
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    // Main Heading
-    doc.setFontSize(22);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = margin;
+
+    // Header
+    doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Entrepreneurial Potential Results', 105, 20, { align: 'center' });
-    // Subheading
+    doc.text('Entrepreneurial Potential Results', pageWidth / 2, y, { align: 'center' });
+    y += 20;
+
+    // Main Score
+    doc.setFontSize(36);
+    doc.text(results.totalScore.toString(), pageWidth / 2, y, { align: 'center' });
+    y += 20;
+
+    // Profile
     doc.setFontSize(16);
+    doc.text(results.persona, pageWidth / 2, y, { align: 'center' });
+    y += 15;
+
+    // Description
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'italic');
+    const descriptionLines = doc.splitTextToSize(results.rank, pageWidth - (2 * margin));
+    doc.text(descriptionLines, pageWidth / 2, y, { align: 'center' });
+    y += 10 + (descriptionLines.length * 7);
+
+    // Category Scores
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 14, 35);
-    // Body
+    doc.text('Category Scores', margin, y);
+    y += 15;
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Total Score: ${results.totalScore}`, 14, 45);
-    doc.text(`Rank: ${results.rank}`, 14, 53);
-    doc.text(`Persona: ${results.persona}`, 14, 61);
-    // Section Heading
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dimension Scores:', 14, 75);
-    doc.setFont('helvetica', 'normal');
-    let y = 83;
     Object.entries(results.dimensions).forEach(([dimension, score]) => {
-      doc.text(`- ${dimensionNames[dimension] || dimension}: ${score}/20`, 18, y);
-      y += 8;
+      doc.text(`${dimension}: ${score}/20`, margin, y);
+      y += 10;
     });
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
     // Strengths
     doc.setFont('helvetica', 'bold');
-    doc.text('Strengths:', 14, y + 4); y += 12;
+    doc.text('Key Strengths', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    results.strengths.forEach((s: string, i: number) => {
-      doc.text(`- ${s}`, 18, y + i * 8);
+    results.strengths.forEach((strength: string) => {
+      const strengthLines = doc.splitTextToSize(`• ${strength}`, pageWidth - (2 * margin));
+      doc.text(strengthLines, margin, y);
+      y += 10 * strengthLines.length;
     });
-    y = y + results.strengths.length * 8 + 8;
-    // Growth Opportunities
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
+    // Development Areas
     doc.setFont('helvetica', 'bold');
-    doc.text('Growth Opportunities:', 14, y); y += 8;
+    doc.text('Growth Opportunities', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    results.weaknesses.forEach((w: string, i: number) => {
-      doc.text(`- ${w}`, 18, y + i * 8);
+    results.weaknesses.forEach((weakness: string) => {
+      const weaknessLines = doc.splitTextToSize(`• ${weakness}`, pageWidth - (2 * margin));
+      doc.text(weaknessLines, margin, y);
+      y += 10 * weaknessLines.length;
     });
-    y = y + results.weaknesses.length * 8 + 8;
-    // 90-Day Roadmap
-    doc.setFont('helvetica', 'bold');
-    doc.text('90-Day Roadmap:', 14, y); y += 8;
-    doc.setFont('helvetica', 'normal');
-    doc.text('First 30 Days:', 18, y); y += 8;
-    results.roadmap.thirty.forEach((item: string, i: number) => {
-      doc.text(`- ${item}`, 22, y + i * 8);
-    });
-    let y2 = y + results.roadmap.thirty.length * 8 + 4;
-    doc.text('Days 31-60:', 18, y2); y2 += 8;
-    results.roadmap.sixty.forEach((item: string, i: number) => {
-      doc.text(`- ${item}`, 22, y2 + i * 8);
-    });
-    y2 = y2 + results.roadmap.sixty.length * 8 + 4;
-    doc.text('Days 61-90:', 18, y2); y2 += 8;
-    results.roadmap.ninety.forEach((item: string, i: number) => {
-      doc.text(`- ${item}`, 22, y2 + i * 8);
-    });
+
     doc.save('entrepreneurial-potential-results.pdf');
   };
 

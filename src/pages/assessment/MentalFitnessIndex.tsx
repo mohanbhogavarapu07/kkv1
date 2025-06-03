@@ -435,85 +435,115 @@ function MentalFitnessResults({ results, onRetakeQuiz }: { results: MentalFitnes
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    let y = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = margin;
 
     // Header
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Mental Fitness Index Results', 105, y, { align: 'center' });
-    y += 15;
+    doc.text('Mental Fitness Index Results', pageWidth / 2, y, { align: 'center' });
+    y += 20;
 
     // Main Score
     doc.setFontSize(36);
-    doc.text(results.mfiScore.toString(), 105, y, { align: 'center' });
-    y += 15;
+    doc.text(results.mfiScore.toString(), pageWidth / 2, y, { align: 'center' });
+    y += 20;
 
     // Category
     doc.setFontSize(16);
-    doc.text(results.category, 105, y, { align: 'center' });
-    y += 10;
+    doc.text(results.category, pageWidth / 2, y, { align: 'center' });
+    y += 15;
 
     // Description
     doc.setFontSize(12);
     doc.setFont('helvetica', 'italic');
-    doc.text(results.description, 105, y, { align: 'center', maxWidth: 180 });
-    y += 20;
+    const descriptionLines = doc.splitTextToSize(results.description, pageWidth - (2 * margin));
+    doc.text(descriptionLines, pageWidth / 2, y, { align: 'center' });
+    y += 10 + (descriptionLines.length * 7);
 
-    // Key Metrics
+    // Key Metrics Section
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Key Metrics', 14, y);
-    y += 10;
+    doc.text('Key Metrics', margin, y);
+    y += 15;
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Mental VO₂ Max: ${results.mvo2Score}`, 14, y); y += 8;
-    doc.text(`Recovery Index: ${results.recoveryIndex}/10`, 14, y); y += 8;
-    doc.text(`Focus Endurance: ${results.focusEndurance}%`, 14, y); y += 8;
-    doc.text(`Task Agility: ${results.taskAgility}%`, 14, y); y += 15;
+    doc.text(`Mental VO₂ Max: ${results.mvo2Score}`, margin, y); y += 10;
+    doc.text(`Recovery Index: ${results.recoveryIndex}/10`, margin, y); y += 10;
+    doc.text(`Focus Endurance: ${results.focusEndurance}%`, margin, y); y += 10;
+    doc.text(`Task Agility: ${results.taskAgility}%`, margin, y); y += 20;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
 
     // Category Scores
     doc.setFont('helvetica', 'bold');
-    doc.text('Category Scores', 14, y);
-    y += 10;
+    doc.text('Category Scores', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
     Object.entries(results.categoryScores).forEach(([category, score]) => {
-      doc.text(`${category}: ${score}%`, 14, y);
-      y += 8;
+      doc.text(`${category}: ${score}%`, margin, y);
+      y += 10;
     });
     y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
 
     // Strengths
     doc.setFont('helvetica', 'bold');
-    doc.text('Key Strengths', 14, y);
-    y += 8;
+    doc.text('Key Strengths', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
     results.strengths.forEach((strength: string) => {
-      doc.text(`• ${strength}`, 14, y);
-      y += 8;
+      const strengthLines = doc.splitTextToSize(`• ${strength}`, pageWidth - (2 * margin));
+      doc.text(strengthLines, margin, y);
+      y += 10 * strengthLines.length;
     });
-    y += 5;
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
 
     // Growth Opportunities
     doc.setFont('helvetica', 'bold');
-    doc.text('Growth Opportunities', 14, y);
-    y += 8;
+    doc.text('Growth Opportunities', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
     results.weaknesses.forEach((weakness: string) => {
-      doc.text(`• ${weakness}`, 14, y);
-      y += 8;
+      const weaknessLines = doc.splitTextToSize(`• ${weakness}`, pageWidth - (2 * margin));
+      doc.text(weaknessLines, margin, y);
+      y += 10 * weaknessLines.length;
     });
-    y += 5;
+    y += 15;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
 
     // Recommended Mode
     doc.setFont('helvetica', 'bold');
-    doc.text('Recommended Mode', 14, y);
-    y += 8;
+    doc.text('Recommended Mode', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    doc.text(results.recommendedMode, 14, y);
-    y += 8;
+    doc.text(results.recommendedMode, margin, y);
+    y += 10;
     doc.setFont('helvetica', 'italic');
-    doc.text(results.modeDescription, 14, y, { maxWidth: 180 });
+    const modeLines = doc.splitTextToSize(results.modeDescription, pageWidth - (2 * margin));
+    doc.text(modeLines, margin, y);
 
     doc.save('mental-fitness-results.pdf');
   };

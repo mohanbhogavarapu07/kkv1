@@ -730,72 +730,80 @@ const ResultsDashboard: React.FC<ResultsProps> = ({
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    let y = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = margin;
 
     // Header
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Emotional Intelligence Results', 105, y, { align: 'center' });
-    y += 15;
+    doc.text('Emotional Intelligence Results', pageWidth / 2, y, { align: 'center' });
+    y += 20;
 
     // Main Score
     doc.setFontSize(36);
-    doc.text(totalScore.toString(), 105, y, { align: 'center' });
-    y += 15;
+    doc.text(totalScore.toString(), pageWidth / 2, y, { align: 'center' });
+    y += 20;
 
-    // Persona
+    // Level
     doc.setFontSize(16);
-    doc.text(persona.type, 105, y, { align: 'center' });
-    y += 10;
+    doc.text(persona.type, pageWidth / 2, y, { align: 'center' });
+    y += 15;
 
     // Description
     doc.setFontSize(12);
     doc.setFont('helvetica', 'italic');
-    doc.text(persona.description, 105, y, { align: 'center', maxWidth: 180 });
-    y += 20;
+    const descriptionLines = doc.splitTextToSize(persona.description, pageWidth - (2 * margin));
+    doc.text(descriptionLines, pageWidth / 2, y, { align: 'center' });
+    y += 10 + (descriptionLines.length * 7);
 
     // Category Scores
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Category Scores', 14, y);
-    y += 10;
+    doc.text('Category Scores', margin, y);
+    y += 15;
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     Object.entries(categoryScores).forEach(([category, score]) => {
-      doc.text(`${formatCategoryName(category)}: ${score}/25`, 14, y);
-      y += 8;
+      doc.text(`${category}: ${score}/25`, margin, y);
+      y += 10;
     });
     y += 10;
 
-    // Focus Areas
-    doc.setFont('helvetica', 'bold');
-    doc.text('Key Focus Areas', 14, y);
-    y += 8;
-    doc.setFont('helvetica', 'normal');
-    growthPlan.focusAreas.forEach((area: string) => {
-      doc.text(`• ${area}`, 14, y);
-      y += 8;
-    });
-    y += 5;
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
 
-    // Seven Day Plan
+    // Strengths
     doc.setFont('helvetica', 'bold');
-    doc.text('7-Day Growth Plan', 14, y);
-    y += 8;
+    doc.text('Key Strengths', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    doc.text(`${growthPlan.sevenDayPlan.area1.name}:`, 14, y);
-    y += 8;
-    growthPlan.sevenDayPlan.area1.plan.forEach((item: string) => {
-      doc.text(`• ${item}`, 14, y);
-      y += 8;
+    growthPlan.focusAreas.forEach((strength: string) => {
+      const strengthLines = doc.splitTextToSize(`• ${strength}`, pageWidth - (2 * margin));
+      doc.text(strengthLines, margin, y);
+      y += 10 * strengthLines.length;
     });
-    y += 5;
-    doc.text(`${growthPlan.sevenDayPlan.area2.name}:`, 14, y);
-    y += 8;
-    growthPlan.sevenDayPlan.area2.plan.forEach((item: string) => {
-      doc.text(`• ${item}`, 14, y);
-      y += 8;
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
+    // Development Areas
+    doc.setFont('helvetica', 'bold');
+    doc.text('Growth Opportunities', margin, y);
+    y += 15;
+    doc.setFont('helvetica', 'normal');
+    growthPlan.exercises.forEach((area: string) => {
+      const areaLines = doc.splitTextToSize(`• ${area}`, pageWidth - (2 * margin));
+      doc.text(areaLines, margin, y);
+      y += 10 * areaLines.length;
     });
 
     doc.save('emotional-intelligence-results.pdf');

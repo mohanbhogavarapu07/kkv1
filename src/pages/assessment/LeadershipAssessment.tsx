@@ -12,6 +12,10 @@ interface AssessmentResults {
   scores: Record<string, number>;
   strengths: string[];
   developmentAreas: string[];
+  totalScore: number;
+  leadershipStyle: string;
+  styleDescription: string;
+  categoryScores: Record<string, number>;
 }
 
 interface ResultsSectionProps {
@@ -270,44 +274,82 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    // Main Heading
-    doc.setFontSize(22);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = margin;
+
+    // Header
+    doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Leadership Assessment Results', 105, 20, { align: 'center' });
-    // Subheading
+    doc.text('Leadership Assessment Results', pageWidth / 2, y, { align: 'center' });
+    y += 20;
+
+    // Main Score
+    doc.setFontSize(36);
+    doc.text(results.totalScore.toString(), pageWidth / 2, y, { align: 'center' });
+    y += 20;
+
+    // Style
     doc.setFontSize(16);
+    doc.text(results.leadershipStyle, pageWidth / 2, y, { align: 'center' });
+    y += 15;
+
+    // Description
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'italic');
+    const descriptionLines = doc.splitTextToSize(results.styleDescription, pageWidth - (2 * margin));
+    doc.text(descriptionLines, pageWidth / 2, y, { align: 'center' });
+    y += 10 + (descriptionLines.length * 7);
+
+    // Category Scores
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 14, 35);
-    // Body
+    doc.text('Category Scores', margin, y);
+    y += 15;
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Leadership Style: ${results.style}`, 14, 45);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`"${results.description}"`, 14, 53, { maxWidth: 180 });
-    // Section Heading
-    doc.setFont('helvetica', 'bold');
-    doc.text('Scores:', 14, 67);
-    doc.setFont('helvetica', 'normal');
-    let y = 75;
-    Object.entries(results.scores).forEach(([category, score]) => {
-      doc.text(`- ${category}: ${score}%`, 18, y);
-      y += 8;
+    Object.entries(results.categoryScores).forEach(([category, score]) => {
+      doc.text(`${category}: ${score}/25`, margin, y);
+      y += 10;
     });
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
     // Strengths
     doc.setFont('helvetica', 'bold');
-    doc.text('Strengths:', 14, y + 4); y += 12;
+    doc.text('Key Strengths', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    results.strengths.forEach((s: string, i: number) => {
-      doc.text(`- ${s}`, 18, y + i * 8);
+    results.strengths.forEach((strength: string) => {
+      const strengthLines = doc.splitTextToSize(`• ${strength}`, pageWidth - (2 * margin));
+      doc.text(strengthLines, margin, y);
+      y += 10 * strengthLines.length;
     });
-    y = y + results.strengths.length * 8 + 8;
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
     // Development Areas
     doc.setFont('helvetica', 'bold');
-    doc.text('Development Areas:', 14, y); y += 8;
+    doc.text('Growth Opportunities', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    results.developmentAreas.forEach((d: string, i: number) => {
-      doc.text(`- ${d}`, 18, y + i * 8);
+    results.developmentAreas.forEach((area: string) => {
+      const areaLines = doc.splitTextToSize(`• ${area}`, pageWidth - (2 * margin));
+      doc.text(areaLines, margin, y);
+      y += 10 * areaLines.length;
     });
+
     doc.save('leadership-assessment-results.pdf');
   };
 
@@ -696,7 +738,17 @@ const LeadershipAssessment = () => {
         "Risk-taking in decision making",
         "Conflict resolution",
         "Time management"
-      ]
+      ],
+      totalScore: 85,
+      leadershipStyle: "Transformational Leader",
+      styleDescription: "You demonstrate strong abilities in inspiring and motivating others while driving innovation and change.",
+      categoryScores: {
+        "Vision & Strategy": 85,
+        "Communication": 90,
+        "Decision Making": 80,
+        "Team Building": 88,
+        "Adaptability": 82
+      }
     };
     
     setResults(calculatedResults);

@@ -674,64 +674,82 @@ function ResilienceResults({
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    let y = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = margin;
 
     // Header
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Resilience Assessment Results', 105, y, { align: 'center' });
-    y += 15;
+    doc.text('Resilience Score Results', pageWidth / 2, y, { align: 'center' });
+    y += 20;
 
     // Main Score
     doc.setFontSize(36);
-    doc.text(results.totalScore.toString(), 105, y, { align: 'center' });
-    y += 15;
+    doc.text(results.totalScore.toString(), pageWidth / 2, y, { align: 'center' });
+    y += 20;
 
-    // Tier
+    // Level
     doc.setFontSize(16);
-    doc.text(results.tier, 105, y, { align: 'center' });
-    y += 10;
-
-    // Archetype
-    doc.setFontSize(14);
-    doc.text(`Resilience Archetype: ${results.archetype}`, 105, y, { align: 'center' });
+    doc.text(results.tier, pageWidth / 2, y, { align: 'center' });
     y += 15;
 
-    // Scores Section
+    // Description
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'italic');
+    const descriptionLines = doc.splitTextToSize(results.tier === 'Grit-Rich Powerhouse' ? "Exceptional resilience - you thrive under pressure and consistently overcome major challenges." : results.tier === 'Tough-Minded Achiever' ? "Strong resilience - you handle most setbacks well and pursue long-term goals effectively." : results.tier === 'Adaptive' ? "Average resilience - you cope reasonably well but have room to strengthen your mental toughness." : "Developing resilience - focus on building foundational coping skills and stress management.", pageWidth - (2 * margin));
+    doc.text(descriptionLines, pageWidth / 2, y, { align: 'center' });
+    y += 10 + (descriptionLines.length * 7);
+
+    // Category Scores
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Dimension Scores', 14, y);
-    y += 10;
+    doc.text('Category Scores', margin, y);
+    y += 15;
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Emotional Endurance: ${results.subscores.emotional}/25`, 14, y); y += 8;
-    doc.text(`Grit & Perseverance: ${results.subscores.grit}/25`, 14, y); y += 8;
-    doc.text(`Cognitive Flexibility: ${results.subscores.cognitive}/25`, 14, y); y += 8;
-    doc.text(`Optimism & Recovery: ${results.subscores.optimism}/25`, 14, y); y += 15;
+    doc.text(`Emotional Endurance: ${results.subscores.emotional}/25`, margin, y); y += 8;
+    doc.text(`Grit & Perseverance: ${results.subscores.grit}/25`, margin, y); y += 8;
+    doc.text(`Cognitive Flexibility: ${results.subscores.cognitive}/25`, margin, y); y += 8;
+    doc.text(`Optimism & Recovery: ${results.subscores.optimism}/25`, margin, y); y += 15;
 
-    // Role Model
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
+    // Strengths
     doc.setFont('helvetica', 'bold');
-    doc.text('Your Role Model', 14, y);
-    y += 8;
-    doc.setFont('helvetica', 'normal');
-    doc.text(results.roleModel.name, 14, y);
-    y += 8;
-    doc.setFont('helvetica', 'italic');
-    doc.text(results.roleModel.description, 14, y, { maxWidth: 180 });
+    doc.text('Key Strengths', margin, y);
     y += 15;
-
-    // Key Lessons
-    doc.setFont('helvetica', 'bold');
-    doc.text('Key Lessons', 14, y);
-    y += 8;
     doc.setFont('helvetica', 'normal');
     results.roleModel.lessons.forEach((lesson: string) => {
-      doc.text(`• ${lesson}`, 14, y);
-      y += 8;
+      const strengthLines = doc.splitTextToSize(`• ${lesson}`, pageWidth - (2 * margin));
+      doc.text(strengthLines, margin, y);
+      y += 10 * strengthLines.length;
+    });
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
+    // Development Areas
+    doc.setFont('helvetica', 'bold');
+    doc.text('Growth Opportunities', margin, y);
+    y += 15;
+    doc.setFont('helvetica', 'normal');
+    results.roleModel.lessons.forEach((lesson: string) => {
+      const areaLines = doc.splitTextToSize(`• ${lesson}`, pageWidth - (2 * margin));
+      doc.text(areaLines, margin, y);
+      y += 10 * areaLines.length;
     });
 
-    doc.save('resilience-assessment-results.pdf');
+    doc.save('resilience-score-results.pdf');
   };
 
   const handleSendToEmail = () => {

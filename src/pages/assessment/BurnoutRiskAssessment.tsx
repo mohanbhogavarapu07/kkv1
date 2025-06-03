@@ -509,62 +509,83 @@ function ResultsDashboard({ results, onRetake }: ResultsDashboardProps) {
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    // Main Heading
-    doc.setFontSize(22);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = margin;
+
+    // Header
+    doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Burnout Risk Assessment Results', 105, 20, { align: 'center' });
-    // Subheading
+    doc.text('Burnout Risk Assessment Results', pageWidth / 2, y, { align: 'center' });
+    y += 20;
+
+    // Main Score
+    doc.setFontSize(36);
+    doc.text(results.totalScore.toString(), pageWidth / 2, y, { align: 'center' });
+    y += 20;
+
+    // Risk Level
     doc.setFontSize(16);
+    doc.text(results.riskLevel, pageWidth / 2, y, { align: 'center' });
+    y += 15;
+
+    // Description
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'italic');
+    const descriptionLines = doc.splitTextToSize(results.description, pageWidth - (2 * margin));
+    doc.text(descriptionLines, pageWidth / 2, y, { align: 'center' });
+    y += 10 + (descriptionLines.length * 7);
+
+    // Category Scores
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 14, 35);
-    // Body
+    doc.text('Category Scores', margin, y);
+    y += 15;
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Total Score: ${results.totalScore}/100`, 14, 45);
-    doc.text(`Phase: ${results.phase.name}`, 14, 53);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`"${results.phase.description}"`, 14, 61, { maxWidth: 180 });
-    // Section Heading
-    doc.setFont('helvetica', 'bold');
-    doc.text('Subscores:', 14, 75);
-    doc.setFont('helvetica', 'normal');
-    let y = 83;
-    Object.entries(results.subscores).forEach(([category, score]) => {
-      doc.text(`- ${category.charAt(0).toUpperCase() + category.slice(1)}: ${score}%`, 18, y);
-      y += 8;
+    Object.entries(results.categoryScores).forEach(([category, score]) => {
+      doc.text(`${category}: ${score}/25`, margin, y);
+      y += 10;
     });
-    // Root Causes
-    doc.setFont('helvetica', 'bold');
-    doc.text('Root Causes:', 14, y + 4); y += 12;
-    doc.setFont('helvetica', 'normal');
-    if (results.rootCauses.length > 0) {
-      results.rootCauses.forEach((cause: string, i: number) => {
-        doc.text(`- ${cause}`, 18, y + i * 8);
-      });
-      y = y + results.rootCauses.length * 8 + 8;
-    } else {
-      doc.text('- No specific root causes identified.', 18, y + 8);
-      y = y + 16;
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
     }
-    // Recovery Blueprint
+
+    // Strengths
     doc.setFont('helvetica', 'bold');
-    doc.text('Recovery Blueprint:', 14, y); y += 8;
+    doc.text('Key Strengths', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    doc.text('Daily:', 18, y); y += 8;
-    results.recoveryBlueprint.daily.forEach((item: string, i: number) => {
-      doc.text(`- ${item}`, 22, y + i * 8);
+    results.strengths.forEach((strength: string) => {
+      const strengthLines = doc.splitTextToSize(`• ${strength}`, pageWidth - (2 * margin));
+      doc.text(strengthLines, margin, y);
+      y += 10 * strengthLines.length;
     });
-    let y2 = y + results.recoveryBlueprint.daily.length * 8 + 4;
-    doc.text('Weekly:', 18, y2); y2 += 8;
-    results.recoveryBlueprint.weekly.forEach((item: string, i: number) => {
-      doc.text(`- ${item}`, 22, y2 + i * 8);
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
+    // Development Areas
+    doc.setFont('helvetica', 'bold');
+    doc.text('Growth Opportunities', margin, y);
+    y += 15;
+    doc.setFont('helvetica', 'normal');
+    results.developmentAreas.forEach((area: string) => {
+      const areaLines = doc.splitTextToSize(`• ${area}`, pageWidth - (2 * margin));
+      doc.text(areaLines, margin, y);
+      y += 10 * areaLines.length;
     });
-    y2 = y2 + results.recoveryBlueprint.weekly.length * 8 + 4;
-    doc.text('Supplements:', 18, y2); y2 += 8;
-    results.recoveryBlueprint.supplements.forEach((item: string, i: number) => {
-      doc.text(`- ${item}`, 22, y2 + i * 8);
-    });
-    doc.save('burnout-risk-assessment-results.pdf');
+
+    doc.save('burnout-risk-results.pdf');
   };
 
   return (

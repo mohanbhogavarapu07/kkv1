@@ -335,71 +335,83 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
 
   const handleDownloadResults = () => {
     const doc = new jsPDF();
-    // Main Heading
-    doc.setFontSize(22);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = margin;
+
+    // Header
+    doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Productivity Style Quiz Results', 105, 20, { align: 'center' });
-    // Subheading
+    doc.text('Productivity Style Results', pageWidth / 2, y, { align: 'center' });
+    y += 20;
+
+    // Main Style
+    doc.setFontSize(36);
+    doc.text(results.type, pageWidth / 2, y, { align: 'center' });
+    y += 20;
+
+    // Secondary Style
     doc.setFontSize(16);
+    doc.text(`Chronotype: ${results.chronotype}`, pageWidth / 2, y, { align: 'center' });
+    y += 15;
+
+    // Description
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'italic');
+    const descriptionLines = doc.splitTextToSize(results.description, pageWidth - (2 * margin));
+    doc.text(descriptionLines, pageWidth / 2, y, { align: 'center' });
+    y += 10 + (descriptionLines.length * 7);
+
+    // Style Scores
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 14, 35);
-    // Body
+    doc.text('Style Scores', margin, y);
+    y += 15;
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Type: ${results.type}`, 14, 45);
-    doc.text(`Chronotype: ${results.chronotype}`, 14, 53);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`"${results.description}"`, 14, 61, { maxWidth: 180 });
-    // Section Heading
-    doc.setFont('helvetica', 'bold');
-    doc.text('Scores:', 14, 75);
-    doc.setFont('helvetica', 'normal');
-    let y = 83;
-    doc.text(`- Cognitive Rhythm: ${results.score.cognitive}%`, 18, y); y += 8;
-    doc.text(`- Work Style: ${results.score.workStyle}%`, 18, y); y += 8;
-    doc.text(`- Energy Management: ${results.score.energy}%`, 18, y); y += 8;
-    doc.text(`- Focus Drivers: ${results.score.focus}%`, 18, y); y += 8;
-    doc.text(`- Tool Usage: ${results.score.toolUsage}%`, 18, y); y += 8;
+    Object.entries(results.score).forEach(([style, score]) => {
+      doc.text(`${style}: ${score}%`, margin, y);
+      y += 10;
+    });
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
     // Strengths
     doc.setFont('helvetica', 'bold');
-    doc.text('Strengths:', 14, y + 4); y += 12;
+    doc.text('Key Strengths', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    results.strengths.forEach((s: string, i: number) => {
-      doc.text(`- ${s}`, 18, y + i * 8);
+    results.strengths.forEach((strength: string) => {
+      const strengthLines = doc.splitTextToSize(`• ${strength}`, pageWidth - (2 * margin));
+      doc.text(strengthLines, margin, y);
+      y += 10 * strengthLines.length;
     });
-    y = y + results.strengths.length * 8 + 8;
-    // Challenges
+    y += 10;
+
+    // Check if we need a new page
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      y = margin;
+    }
+
+    // Development Areas
     doc.setFont('helvetica', 'bold');
-    doc.text('Challenges:', 14, y); y += 8;
+    doc.text('Growth Opportunities', margin, y);
+    y += 15;
     doc.setFont('helvetica', 'normal');
-    results.challenges.forEach((c: string, i: number) => {
-      doc.text(`- ${c}`, 18, y + i * 8);
+    results.challenges.forEach((challenge: string) => {
+      const challengeLines = doc.splitTextToSize(`• ${challenge}`, pageWidth - (2 * margin));
+      doc.text(challengeLines, margin, y);
+      y += 10 * challengeLines.length;
     });
-    y = y + results.challenges.length * 8 + 8;
-    // Time Blocking
-    doc.setFont('helvetica', 'bold');
-    doc.text('Recommended Time Blocking Strategies:', 14, y); y += 8;
-    doc.setFont('helvetica', 'normal');
-    results.timeBlocking.forEach((t: string, i: number) => {
-      doc.text(`- ${t}`, 18, y + i * 8);
-    });
-    y = y + results.timeBlocking.length * 8 + 8;
-    // Tools
-    doc.setFont('helvetica', 'bold');
-    doc.text('Recommended Tools:', 14, y); y += 8;
-    doc.setFont('helvetica', 'normal');
-    results.tools.forEach((t: string, i: number) => {
-      doc.text(`- ${t}`, 18, y + i * 8);
-    });
-    y = y + results.tools.length * 8 + 8;
-    // Habits
-    doc.setFont('helvetica', 'bold');
-    doc.text('Recommended Habits:', 14, y); y += 8;
-    doc.setFont('helvetica', 'normal');
-    results.habits.forEach((h: string, i: number) => {
-      doc.text(`- ${h}`, 18, y + i * 8);
-    });
-    doc.save('productivity-quiz-results.pdf');
+
+    doc.save('productivity-style-results.pdf');
   };
 
   const handleSendToEmail = () => {
@@ -439,7 +451,7 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
       doc.setFont('helvetica', 'bold');
       doc.text('Productivity Scores:', 14, y); y += 10;
       doc.setFont('helvetica', 'normal');
-      doc.text(`Cognitive Style: ${results.score.cognitive}%`, 18, y); y += 8;
+      doc.text(`Cognitive Rhythm: ${results.score.cognitive}%`, 18, y); y += 8;
       doc.text(`Work Style: ${results.score.workStyle}%`, 18, y); y += 8;
       doc.text(`Energy Management: ${results.score.energy}%`, 18, y); y += 8;
       doc.text(`Focus Drivers: ${results.score.focus}%`, 18, y); y += 8;
