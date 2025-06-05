@@ -32,7 +32,7 @@ const Contact = () => {
                     <Mail className="w-5 h-5" />
                     Email
                   </h3>
-                  <p className="text-gray-700">hello@krishnakumar.com</p>
+                  <p className="text-gray-700">o0krissh0o@gmail.com</p>
                 </div>
                 <div>
                   <h3 className="text-lg font-playfair mb-1 flex items-center gap-0">
@@ -52,7 +52,7 @@ const Contact = () => {
                     <Phone className="w-5 h-5" />
                     Phone
                   </h3>
-                  <p className="text-gray-700 mb-4">+91 9666342441</p>
+                  <p className="text-gray-700 mb-4">+91 9482650003</p>
                   {/* <a
                     href="#"
                     className="border border-black px-6 py-3 inline-block hover:bg-black hover:text-white transition-colors duration-300"

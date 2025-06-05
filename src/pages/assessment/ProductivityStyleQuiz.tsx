@@ -507,7 +507,7 @@ const ResultsSection = ({ results, onRestart }: ResultsSectionProps) => {
       const pdfBase64 = doc.output('datauristring').split(',')[1];
 
       // Send PDF via email
-      const response = await fetch('/api/assessment/send-pdf', {
+      const response = await fetch('https://kk-backend-wra3.onrender.com/api/assessment/send-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

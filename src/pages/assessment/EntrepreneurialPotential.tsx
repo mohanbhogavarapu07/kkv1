@@ -720,7 +720,29 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
         y += 10 * weaknessLines.length;
       });
 
-      doc.save('entrepreneurial-potential-results.pdf');
+      // Convert PDF to base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Send email with PDF attachment
+      const response = await fetch('https://kk-backend-wra3.onrender.com/api/assessment/send-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          assessmentType: 'entrepreneurial-potential',
+          pdfBuffer: pdfBase64
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      setShowEmailModal(false);
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
       console.error('Error sending email:', error);
       setEmailError('Failed to send email. Please try again.');

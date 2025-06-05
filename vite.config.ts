@@ -10,9 +10,8 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://kk-backend-wra3.onrender.com',
         changeOrigin: true,
-        secure: false,
       }
     }
   },

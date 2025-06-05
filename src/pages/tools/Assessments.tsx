@@ -67,7 +67,7 @@ const Assessments = () => {
     
     try {
       // Save assessment data
-      const response = await fetch('http://localhost:5000/api/assessment/start', {
+      const response = await fetch('https://kk-backend-wra3.onrender.com/api/assessment/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

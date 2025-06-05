@@ -31,7 +31,7 @@ const Insights = () => {
   // Fetch all blog posts
   const fetchPosts = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/blog/posts');
+      const response = await fetch('https://kk-backend-wra3.onrender.com/api/blog/posts');
       const data = await response.json();
       if (response.ok) {
         setPosts(data);
@@ -58,8 +58,8 @@ const Insights = () => {
 
     try {
       const url = currentPost._id 
-        ? `http://localhost:5000/api/blog/posts/${currentPost._id}`
-        : 'http://localhost:5000/api/blog/posts';
+        ? `https://kk-backend-wra3.onrender.com/api/blog/posts/${currentPost._id}`
+        : 'https://kk-backend-wra3.onrender.com/api/blog/posts';
       
       const response = await fetch(url, {
         method: currentPost._id ? 'PUT' : 'POST',
@@ -88,7 +88,7 @@ const Insights = () => {
     if (!confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/blog/posts/${id}`, {
+      const response = await fetch(`https://kk-backend-wra3.onrender.com/api/blog/posts/${id}`, {
         method: 'DELETE',
       });
 
@@ -108,14 +108,14 @@ const Insights = () => {
   const sendToSubscribers = async (post: BlogPost) => {
     try {
       // First fetch the complete post data
-      const postResponse = await fetch(`http://localhost:5000/api/blog/posts/${post.slug}`);
+      const postResponse = await fetch(`https://kk-backend-wra3.onrender.com/api/blog/posts/${post.slug}`);
       const completePost = await postResponse.json();
       
       if (!postResponse.ok) {
         throw new Error('Failed to fetch complete post data');
       }
 
-      const response = await fetch('http://localhost:5000/api/subscribers/send-newsletter', {
+      const response = await fetch('https://kk-backend-wra3.onrender.com/api/subscribers/send-newsletter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ const Insights = () => {
       const data = await response.json();
       if (response.ok) {
         // Update the post's published status and date
-        const updateResponse = await fetch(`http://localhost:5000/api/blog/posts/${completePost._id}`, {
+        const updateResponse = await fetch(`https://kk-backend-wra3.onrender.com/api/blog/posts/${completePost._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

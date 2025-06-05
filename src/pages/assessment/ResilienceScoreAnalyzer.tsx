@@ -524,7 +524,10 @@ const scaleLabels = [
   "Strongly Agree",
 ];
 
-function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: ResilienceResults) => void, onBack: () => void }) {
+function ResilienceQuiz({ onComplete, onBack }: { 
+  onComplete: (answers: Record<number, number>) => void;
+  onBack: () => void;
+}) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -537,8 +540,7 @@ function ResilienceQuiz({ onComplete, onBack }: { onComplete: (results: Resilien
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
     } else {
-      const results = calculateResilienceScore(answers, questions);
-      onComplete(results);
+      onComplete(answers);
     }
   };
 
@@ -813,7 +815,7 @@ function ResilienceResults({
       const pdfBase64 = doc.output('datauristring').split(',')[1];
 
       // Send PDF via email
-      const response = await fetch('/api/assessment/send-pdf', {
+      const response = await fetch('https://kk-backend-wra3.onrender.com/api/assessment/send-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1259,34 +1261,37 @@ function ResilienceResults({
 // 🎯 MAIN COMPONENT
 // =====================================
 const ResilienceScoreAnalyzer = () => {
-  const [step, setStep] = useState<'hero' | 'quiz' | 'results'>('hero');
+  const [currentView, setCurrentView] = useState<'intro' | 'assessment' | 'results'>('intro');
   const [results, setResults] = useState<ResilienceResults | null>(null);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {step === "hero" && (
-        <HeroSection onStartQuiz={() => setStep("quiz")} />
-      )}
-      {step === "quiz" && (
-        <ResilienceQuiz
-          onComplete={(res) => {
-            setResults(res);
-            setStep("results");
-          }}
-          onBack={() => setStep("hero")}
-        />
-      )}
-      {step === "results" && results && (
-        <ResilienceResults
-          results={results}
-          onRetakeQuiz={() => {
-            setResults(null);
-            setStep("quiz");
-          }}
-        />
-      )}
-    </div>
-  );
+  const handleComplete = (answers: Record<number, number>) => {
+    const results = calculateResilienceScore(answers, questions);
+    setResults(results);
+    setCurrentView('results');
+  };
+
+  if (currentView === 'assessment') {
+    return (
+      <ResilienceQuiz
+        onComplete={handleComplete}
+        onBack={() => setCurrentView('intro')}
+      />
+    );
+  }
+
+  if (currentView === 'results' && results) {
+    return (
+      <ResilienceResults
+        results={results}
+        onRetakeQuiz={() => {
+          setResults(null);
+          setCurrentView('assessment');
+        }}
+      />
+    );
+  }
+
+  return <HeroSection onStartQuiz={() => setCurrentView('assessment')} />;
 };
 
 export default ResilienceScoreAnalyzer; 

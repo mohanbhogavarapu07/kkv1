@@ -18,7 +18,7 @@ const SendResultsButton: React.FC<SendResultsButtonProps> = ({
 }) => {
   const handleSendResults = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/assessment/send-results', {
+      const response = await fetch('https://kk-backend-wra3.onrender.com/api/assessment/send-results', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
