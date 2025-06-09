@@ -18,7 +18,7 @@ const Blog = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('https://kk-backend-wra3.onrender.com/api/blog/posts');
+        const response = await fetch('https://kk-backend-wra3.onrender.com/api/blog/posts/public');
         if (!response.ok) {
           throw new Error('Failed to fetch posts');
         }
