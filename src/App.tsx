@@ -25,6 +25,8 @@ import LeadershipAssessment from './pages/assessment/LeadershipAssessment';
 import AdminInsights from './pages/admin/Insights';
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import Affirmation from "./pages/tools/Affirmation";
+import Reflect from "./pages/tools/Reflect";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +48,8 @@ const App = () => (
                 <Route path="/insights/:slug" element={<BlogPost />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/tools/assessments" element={<Assessments />} />
+                <Route path="/tools/affirmation" element={<Affirmation />} />
+                <Route path="/tools/reflect" element={<Reflect />} />
                 <Route path="/assessment/mental-fitness-index" element={<MentalFitnessIndexPage />} />
                 <Route path="/assessment/entrepreneurial-potential" element={<EntrepreneurialPotential />} />
                 <Route path="/assessment/emotionalintelligenceevaluator" element={<EmotionalIntelligenceEvaluator />} />
