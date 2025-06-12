@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 
 interface BlogPost {
   _id: string;
@@ -14,7 +15,15 @@ interface BlogPost {
   featuredImage?: string;
   tags?: string[];
   date?: string;
+  attachments?: {
+    _id: string;
+    name: string;
+    url: string;
+    type: string;
+  }[];
 }
+
+const API_BASE_URL = 'https://kk-backend-wra3.onrender.com';
 
 const Insights = () => {
   const navigate = useNavigate();
@@ -32,6 +41,8 @@ const Insights = () => {
     excerpt: '',
     isPublished: false
   });
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   // Initialize refs array
   useEffect(() => {
@@ -51,11 +62,12 @@ const Insights = () => {
   // Request OTP
   const requestOTP = async () => {
     try {
-      const response = await fetch('https://kk-backend-wra3.onrender.com/api/auth/send-otp', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        credentials: 'include'
       });
 
       const data = await response.json();
@@ -134,12 +146,13 @@ const Insights = () => {
         return;
       }
 
-      const response = await fetch('https://kk-backend-wra3.onrender.com/api/auth/verify-otp', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ otp: otpString }),
+        credentials: 'include'
       });
 
       const data = await response.json();
@@ -162,20 +175,39 @@ const Insights = () => {
   // Fetch all blog posts
   const fetchPosts = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('https://kk-backend-wra3.onrender.com/api/blog/posts', {
+      console.log('Fetching posts with token:', token);
+      
+      const response = await fetch(`${API_BASE_URL}/api/blog/posts`, {
+        credentials: 'include',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       });
-      const data = await response.json();
-      if (response.ok) {
-        setPosts(data);
-      } else {
-        toast.error('Failed to fetch blog posts');
+      
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Handle unauthorized - clear any existing session
+          localStorage.removeItem('adminToken');
+          setIsAuthenticated(false);
+          setShowAuthModal(true);
+          return;
+        }
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to fetch posts: ${errorText}`);
       }
+      
+      const data = await response.json();
+      console.log('Fetched posts:', data);
+      setPosts(data);
     } catch (error) {
-      toast.error('Error fetching blog posts');
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to fetch posts. Please check console for details.');
     } finally {
       setLoading(false);
     }
@@ -185,64 +217,162 @@ const Insights = () => {
     fetchPosts();
   }, []);
 
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setAttachments(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  // Remove file from selection
+  const removeFile = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Upload files
+  const uploadFiles = async (postId: string) => {
+    if (attachments.length === 0) {
+      console.log('No attachments to upload');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      attachments.forEach(file => {
+        console.log('Adding file to FormData:', file.name, file.type, file.size);
+        formData.append('files', file);
+      });
+      formData.append('postId', postId);
+      
+      const response = await fetch(`${API_BASE_URL}/api/blog/upload`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Upload failed:', errorText);
+        throw new Error('Failed to upload files');
+      }
+
+      const data = await response.json();
+      console.log('Upload response data:', data);
+      
+      toast.success('Files uploaded successfully');
+      return data;
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast.error('Error uploading attachments. The post was saved but attachments failed to upload.');
+      throw error;
+    }
+  };
+
   // Create or update blog post
   const savePost = async () => {
-    if (!currentPost.title?.trim() || !currentPost.content?.trim()) {
+    if (!currentPost.title || !currentPost.content) {
       toast.error('Title and content are required');
       return;
     }
 
     try {
+      setUploading(true);
       const token = localStorage.getItem('adminToken');
-      const url = currentPost._id 
-        ? `https://kk-backend-wra3.onrender.com/api/blog/posts/${currentPost._id}`
-        : 'https://kk-backend-wra3.onrender.com/api/blog/posts';
+      const url = currentPost._id
+        ? `${API_BASE_URL}/api/blog/posts/${currentPost._id}`
+        : `${API_BASE_URL}/api/blog/posts`;
       
+      // First save the post
       const response = await fetch(url, {
         method: currentPost._id ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(currentPost),
+        body: JSON.stringify({
+          ...currentPost,
+          publishedAt: currentPost.isPublished ? new Date().toISOString() : null
+        }),
+        credentials: 'include'
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        toast.success(`Blog post ${currentPost._id ? 'updated' : 'created'} successfully`);
-        setIsEditing(false);
-        setCurrentPost({ title: '', content: '', excerpt: '', isPublished: false });
-        fetchPosts();
-      } else {
-        toast.error(data.message || 'Failed to save blog post');
+      if (!response.ok) {
+        throw new Error('Failed to save post');
       }
+
+      const savedPost = await response.json();
+      
+      // If there are attachments, upload them
+      if (attachments.length > 0) {
+        try {
+          const formData = new FormData();
+          attachments.forEach(file => {
+            formData.append('files', file);
+          });
+          formData.append('postId', savedPost._id);
+          
+          const uploadResponse = await fetch(`${API_BASE_URL}/api/blog/upload`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData,
+            credentials: 'include'
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload attachments');
+          }
+
+          const uploadData = await uploadResponse.json();
+          savedPost.attachments = uploadData.attachments;
+          toast.success('Post and attachments saved successfully');
+        } catch (uploadError) {
+          console.error('Error uploading attachments:', uploadError);
+          toast.error('Post saved but attachments failed to upload');
+        }
+      } else {
+        toast.success('Post saved successfully');
+      }
+
+      // Update the posts list with the latest data
+      await fetchPosts();
+      
+      setIsEditing(false);
+      setCurrentPost({ title: '', content: '', excerpt: '', isPublished: false });
+      setAttachments([]);
     } catch (error) {
-      toast.error('Error saving blog post');
+      console.error('Error saving post:', error);
+      toast.error('Failed to save post');
+    } finally {
+      setUploading(false);
     }
   };
 
   // Delete blog post
   const deletePost = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this post?')) return;
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
 
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`https://kk-backend-wra3.onrender.com/api/blog/posts/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/blog/posts/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        credentials: 'include'
       });
 
-      if (response.ok) {
-        toast.success('Blog post deleted successfully');
-        fetchPosts();
-      } else {
-        const data = await response.json();
-        toast.error(data.message || 'Failed to delete blog post');
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
       }
+
+      setPosts(posts.filter(post => post._id !== id));
+      toast.success('Post deleted successfully');
     } catch (error) {
-      toast.error('Error deleting blog post');
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
     }
   };
 
@@ -250,86 +380,74 @@ const Insights = () => {
   const sendToSubscribers = async (post: BlogPost) => {
     try {
       const token = localStorage.getItem('adminToken');
-      // First fetch the complete post data
-      const postResponse = await fetch(`https://kk-backend-wra3.onrender.com/api/blog/posts/${post.slug}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const completePost = await postResponse.json();
-      
-      if (!postResponse.ok) {
-        throw new Error('Failed to fetch complete post data');
-      }
-
-      const response = await fetch('https://kk-backend-wra3.onrender.com/api/subscribers/send-newsletter', {
+      // Using the correct endpoint for sending newsletters
+      const response = await fetch(`${API_BASE_URL}/api/subscribers/send-newsletter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          content: `
-            <h2>${completePost.title}</h2>
-            <p>${completePost.excerpt}</p>
-            <p>Read more at: <a href="${window.location.origin}/insights/${completePost.slug}">${window.location.origin}/insights/${completePost.slug}</a></p>
-          `
+        body: JSON.stringify({
+          content: `New Blog Post: ${post.title}\n\n${post.excerpt}\n\nRead more at: ${window.location.origin}/insights/${post.slug}`
         }),
+        credentials: 'include'
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        // Update the post's published status and date
-        const updateResponse = await fetch(`https://kk-backend-wra3.onrender.com/api/blog/posts/${completePost._id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title: completePost.title,
-            content: completePost.content,
-            excerpt: completePost.excerpt,
-            isPublished: true,
-            category: completePost.category || 'Productivity',
-            featuredImage: completePost.featuredImage,
-            tags: completePost.tags || [],
-            date: completePost.date || new Date().toISOString(),
-            publishedAt: new Date().toISOString()
-          }),
-        });
-
-        if (updateResponse.ok) {
-          toast.success(`Post sent to ${data.count} subscribers and published`);
-          // Refresh the posts list to show updated date
-          fetchPosts();
-        } else {
-          const errorData = await updateResponse.json();
-          toast.error(errorData.message || 'Post sent to subscribers but failed to update publish status');
-        }
-      } else {
-        toast.error(data.message || 'Failed to send post to subscribers');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to send post to subscribers');
       }
+
+      const data = await response.json();
+      toast.success(`Post sent to ${data.count} subscribers successfully`);
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Error sending post to subscribers');
+      console.error('Error sending post to subscribers:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send post to subscribers');
     }
   };
 
   // Edit post
-  const editPost = (post: BlogPost) => {
-    // If the post has sections, join them for editing
-    let content = post.content;
-    if (!content && Array.isArray((post as any).sections)) {
-      content = (post as any).sections.map((s: any) => s.content).join('\n\n');
+  const editPost = async (post: BlogPost) => {
+    try {
+      // Fetch the complete post data including attachments
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/blog/posts/${post.slug}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch post details');
+      }
+
+      const postData = await response.json();
+      console.log('Fetched post data:', postData);
+
+      // If the post has sections, join them for editing
+      let content = postData.content;
+      if (!content && Array.isArray((postData as any).sections)) {
+        content = (postData as any).sections.map((s: any) => s.content).join('\n\n');
+      }
+
+      // Set the current post with all data including attachments
+      setCurrentPost({
+        _id: postData._id,
+        title: postData.title,
+        content: content,
+        excerpt: postData.excerpt,
+        isPublished: postData.isPublished,
+        attachments: postData.attachments || []
+      });
+
+      // Clear any existing new attachments
+      setAttachments([]);
+      setIsEditing(true);
+    } catch (error) {
+      console.error('Error loading post for editing:', error);
+      toast.error('Failed to load post for editing');
     }
-    setCurrentPost({
-      _id: post._id,
-      title: post.title,
-      content: content,
-      excerpt: post.excerpt,
-      isPublished: post.isPublished
-    });
-    setIsEditing(true);
   };
 
   // Auth Modal Component
@@ -391,6 +509,57 @@ const Insights = () => {
     </div>
   );
 
+  // Add this function to handle attachment removal
+  const removeAttachment = async (attachmentId: string) => {
+    if (!currentPost._id) return;
+    
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/blog/posts/${currentPost._id}/attachments/${attachmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove attachment');
+      }
+
+      // Update the current post's attachments
+      setCurrentPost(prev => ({
+        ...prev,
+        attachments: prev.attachments?.filter(att => att._id !== attachmentId) || []
+      }));
+
+      toast.success('Attachment removed successfully');
+    } catch (error) {
+      console.error('Error removing attachment:', error);
+      toast.error('Failed to remove attachment');
+    }
+  };
+
+  // Update the status display in the table
+  const getStatusDisplay = (post: BlogPost) => {
+    if (!post.isPublished) {
+      return {
+        text: 'Draft',
+        className: 'bg-yellow-100 text-yellow-800'
+      };
+    }
+    if (post.attachments?.length > 0) {
+      return {
+        text: 'Published with Attachments',
+        className: 'bg-green-100 text-green-800'
+      };
+    }
+    return {
+      text: 'Published',
+      className: 'bg-green-100 text-green-800'
+    };
+  };
+
   if (!isAuthenticated) {
     return showAuthModal ? <AuthModal /> : null;
   }
@@ -424,6 +593,81 @@ const Insights = () => {
             placeholder="Post Content (HTML supported)"
             className="w-full p-3 border border-gray-300 rounded-sm h-60"
           />
+          
+          {/* File Upload Section */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Attachments
+            </label>
+            <div className="flex items-center space-x-4">
+              <input
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-sm file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-black file:text-white
+                  hover:file:bg-gray-800"
+              />
+            </div>
+            
+            {/* Display existing attachments */}
+            {currentPost.attachments?.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Current Attachments:</h3>
+                <div className="space-y-2">
+                  {currentPost.attachments.map((attachment) => (
+                    <div key={attachment._id} className="flex items-center justify-between p-2 bg-gray-50 rounded-sm">
+                      <div className="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        <a
+                          href={`${API_BASE_URL}/api/blog/uploads/${attachment.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          {attachment.name}
+                        </a>
+                      </div>
+                      <button
+                        onClick={() => removeAttachment(attachment._id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Display new attachments to be uploaded */}
+            {attachments.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">New Attachments to Upload:</h3>
+                <div className="space-y-2">
+                  {attachments.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-sm">
+                      <span className="text-sm text-gray-600">{file.name}</span>
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center space-x-4">
             <label className="flex items-center space-x-2">
               <input
@@ -438,15 +682,17 @@ const Insights = () => {
           <div className="flex space-x-4">
             <button
               onClick={savePost}
-              className="bg-black text-white px-6 py-2 hover:bg-gray-800 transition-colors"
+              disabled={uploading}
+              className="bg-black text-white px-6 py-2 hover:bg-gray-800 transition-colors disabled:bg-gray-400"
             >
-              {isEditing ? 'Update Post' : 'Create Post'}
+              {uploading ? 'Saving...' : (isEditing ? 'Update Post' : 'Create Post')}
             </button>
             {isEditing && (
               <button
                 onClick={() => {
                   setIsEditing(false);
                   setCurrentPost({ title: '', content: '', excerpt: '', isPublished: false });
+                  setAttachments([]);
                 }}
                 className="bg-gray-200 text-gray-800 px-6 py-2 hover:bg-gray-300 transition-colors"
               >
@@ -461,9 +707,15 @@ const Insights = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h2 className="text-xl font-playfair mb-4">All Posts ({posts.length})</h2>
         {loading ? (
-          <p>Loading posts...</p>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+            <span className="ml-3">Loading posts...</span>
+          </div>
         ) : posts.length === 0 ? (
-          <p>No posts found.</p>
+          <div className="text-center py-8 text-gray-500">
+            <p>No posts found.</p>
+            <p className="text-sm mt-2">Create your first post using the form above.</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -480,8 +732,8 @@ const Insights = () => {
                   <tr key={post._id} className="border-b">
                     <td className="py-3 px-4">{post.title}</td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded text-sm ${post.isPublished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                        {post.isPublished ? 'Published' : 'Draft'}
+                      <span className={`px-2 py-1 rounded text-sm ${getStatusDisplay(post).className}`}>
+                        {getStatusDisplay(post).text}
                       </span>
                     </td>
                     <td className="py-3 px-4">

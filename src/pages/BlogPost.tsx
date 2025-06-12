@@ -14,6 +14,12 @@ interface BlogPost {
   content: string;
   date: string;
   sections: Section[];
+  attachments?: {
+    _id: string;
+    name: string;
+    url: string;
+    type: string;
+  }[];
 }
 
 const BlogPost = () => {
@@ -153,6 +159,41 @@ const BlogPost = () => {
               </div>
             ))}
           </div>
+          
+          {post.attachments && post.attachments.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <h3 className="text-xl font-medium mb-4">Attachments</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {post.attachments.map((attachment) => (
+                  <a
+                    key={attachment._id}
+                    href={`https://kk-backend-wra3.onrender.com/api/blog/uploads/${attachment.name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{attachment.name}</p>
+                      <p className="text-sm text-gray-500">{attachment.type}</p>
+                    </div>
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
