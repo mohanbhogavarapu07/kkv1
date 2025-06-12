@@ -1,36 +1,101 @@
+import React from 'react';
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
+function cn(...inputs: any[]) {
+  return twMerge(clsx(inputs));
+}
 
-const Affirmation = () => {
-  const navigate = useNavigate();
+// UI Components
+const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}>
+    {children}
+  </div>
+);
+
+const CardHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <div className={cn("flex flex-col space-y-1.5 p-6", className)}>
+    {children}
+  </div>
+);
+
+const CardTitle: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <h3 className={cn("text-2xl font-semibold leading-none tracking-tight", className)}>
+    {children}
+  </h3>
+);
+
+const CardContent: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <div className={cn("p-6 pt-0", className)}>
+    {children}
+  </div>
+);
+
+const Badge: React.FC<{ 
+  children: React.ReactNode; 
+  className?: string;
+  variant?: 'default' | 'outline';
+}> = ({ children, className = '', variant = 'default' }) => (
+  <div className={cn(
+    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+    variant === 'outline' ? "border-border text-foreground" : "bg-accent text-accent-foreground",
+    className
+  )}>
+    {children}
+  </div>
+);
+
+const Affirmations = () => {
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4">
-      <h1 className="text-3xl font-bold mb-4">Affirmation</h1>
-      <p className="text-lg text-gray-700 mb-6">
-        Welcome to your daily affirmation! Take a moment to reflect and empower yourself with positive thoughts.
-      </p>
-      <blockquote className="border-l-4 border-black-500 pl-4 italic text-xl text-black-700">
-        "You are capable, resilient, and worthy of all the good things in life."
-      </blockquote>
-      {/* Card-style flexbox with info and button, styled like assessment cards */}
-      <div className="bg-white p-8 flex flex-col justify-between min-h-[180px] border border-gray-200 rounded-xl transition-all duration-200 shadow hover:shadow-2xl hover:border-black hover:scale-[1.03] mt-8 max-w-xl mx-auto">
-        <div className="flex-1">
-          <h2 className="font-playfair text-xl mb-3 text-black">Why Practice Affirmations?</h2>
-          <p className="text-gray-700 text-base mb-4">
-            Affirmations help rewire your mindset, boost self-esteem, and foster a positive outlook. Take a moment to internalize today's affirmation and let it guide your actions.
-          </p>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="section-spacing mb-32">
+        <div className="container mx-auto container-padding">
+          <div className="text-center max-w-5xl mx-auto space-y-8">
+            <div className="fade-in">
+              <Badge className="mb-6 bg-accent text-accent-foreground border-border text-sm font-medium px-6 py-3 rounded-full">
+                Daily Affirmations
+              </Badge>
+              <h1 className="text-6xl md:text-8xl font-bold mb-8 leading-[0.9] tracking-tight">
+                <span className="gradient-text">Powerful</span>
+                <br />
+                <span className="text-foreground/90">Affirmations</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed max-w-4xl mx-auto font-light">
+                Transform your mindset with daily positive affirmations
+              </p>
+            </div>
+          </div>
         </div>
-        <button
-          className="mt-4 w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition font-semibold text-sm tracking-wide"
-          type="button"
-          onClick={() => navigate("/tools/reflect")}
-        >
-          Reflect Now
-        </button>
-      </div>
+      </section>
+
+      {/* Main Content */}
+      <section className="section-spacing">
+        <div className="container mx-auto container-padding">
+          <div className="max-w-4xl mx-auto">
+            <Card className="elegant-card border-2 border-border/60 shadow-xl shadow-foreground/5">
+              <CardHeader className="text-center pb-8">
+                <CardTitle className="text-4xl font-bold mb-6">
+                  Your Daily <span className="gradient-text">Affirmations</span>
+                </CardTitle>
+                <p className="text-muted-foreground text-lg font-light leading-relaxed">
+                  Start your day with these powerful affirmations to set a positive tone for your entire day.
+                </p>
+              </CardHeader>
+              <CardContent>
+                {/* Add your affirmations content here */}
+                <div className="space-y-6">
+                  <p className="text-center text-muted-foreground">
+                    Coming soon...
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
 
-export default Affirmation; 
+export default Affirmations; 
