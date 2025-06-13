@@ -84,23 +84,26 @@ const Insights = () => {
 
   // Handle OTP input change
   const handleOtpChange = (index: number, value: string) => {
-    // Only allow numbers
+    // Only allow single digit numbers
     if (!/^\d*$/.test(value)) {
       return;
     }
 
     // Take only the last character if multiple characters are pasted
-    if (value.length > 1) {
-      value = value.slice(-1);
-    }
-
+    const digit = value.slice(-1);
+    
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = digit;
     setOtp(newOtp);
 
-    // Move to next input if value is entered
-    if (value && index < 5) {
-      otpInputRefs.current[index + 1]?.focus();
+    // Move to next input if a digit was entered
+    if (digit && index < 5) {
+      setTimeout(() => {
+        const nextInput = otpInputRefs.current[index + 1];
+        if (nextInput) {
+          nextInput.focus();
+        }
+      }, 0);
     }
   };
 
@@ -109,14 +112,29 @@ const Insights = () => {
     if (e.key === 'Backspace') {
       if (!otp[index] && index > 0) {
         // If current input is empty and backspace is pressed, move to previous input
-        otpInputRefs.current[index - 1]?.focus();
+        setTimeout(() => {
+          const prevInput = otpInputRefs.current[index - 1];
+          if (prevInput) {
+            prevInput.focus();
+          }
+        }, 0);
       }
     } else if (e.key === 'ArrowLeft' && index > 0) {
       // Move to previous input on left arrow
-      otpInputRefs.current[index - 1]?.focus();
+      setTimeout(() => {
+        const prevInput = otpInputRefs.current[index - 1];
+        if (prevInput) {
+          prevInput.focus();
+        }
+      }, 0);
     } else if (e.key === 'ArrowRight' && index < 5) {
       // Move to next input on right arrow
-      otpInputRefs.current[index + 1]?.focus();
+      setTimeout(() => {
+        const nextInput = otpInputRefs.current[index + 1];
+        if (nextInput) {
+          nextInput.focus();
+        }
+      }, 0);
     }
   };
 
@@ -131,9 +149,14 @@ const Insights = () => {
       }
       setOtp(newOtp);
       // Focus the next empty input or the last input
-      const nextEmptyIndex = newOtp.findIndex(digit => !digit);
-      const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex;
-      otpInputRefs.current[focusIndex]?.focus();
+      setTimeout(() => {
+        const nextEmptyIndex = newOtp.findIndex(digit => !digit);
+        const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex;
+        const nextInput = otpInputRefs.current[focusIndex];
+        if (nextInput) {
+          nextInput.focus();
+        }
+      }, 0);
     }
   };
 
