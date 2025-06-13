@@ -20,8 +20,7 @@ const Navbar = () => {
 
   const toolsItems = [
     { name: "Assessments", path: "/tools/assessments" },
-    { name: "Affirmations", path: "/tools/affirmations" },
-    // Add more tools here as needed
+    { name: "Affirmations", path: "/tools/affirmations" }
   ];
 
   useEffect(() => {

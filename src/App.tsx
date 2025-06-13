@@ -26,48 +26,49 @@ import AdminInsights from './pages/admin/Insights';
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import Affirmations from "./pages/tools/Affirmations";
-import Reflect from "./pages/tools/Reflect";
+import Reflect from "../srcs/pages/Index";
+import "../srcs/index.css"; // Import the srcs styles
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <div className="flex-1 pt-[72px]"> {/* Adjust for fixed navbar height */}
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/services/:slug" element={<ServiceDetail />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/insights/:slug" element={<BlogPost />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/tools/assessments" element={<Assessments />} />
-                <Route path="/tools/affirmations" element={<Affirmations />} />
-                <Route path="/tools/reflect" element={<Reflect />} />
-                <Route path="/assessment/mental-fitness-index" element={<MentalFitnessIndexPage />} />
-                <Route path="/assessment/entrepreneurial-potential" element={<EntrepreneurialPotential />} />
-                <Route path="/assessment/emotionalintelligenceevaluator" element={<EmotionalIntelligenceEvaluator />} />
-                <Route path="/assessment/resiliencescoreanalyzer" element={<ResilienceScoreAnalyzer />} />
-                <Route path="/assessment/burnoutriskassessment" element={<BurnoutRiskAssessment />} />
-                <Route path="/assessment/productivity-style-quiz" element={<ProductivityStyleQuiz />} />
-                <Route path="/assessment/leadership" element={<LeadershipAssessment />} />
-                <Route path="/admin/insights" element={<AdminInsights />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/terms" element={<TermsAndConditions />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-            <Footer />
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <div className="flex-1 pt-[72px]">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/services/:slug" element={<ServiceDetail />} />
+              <Route path="/insights" element={<Insights />} />
+              <Route path="/insights/:slug" element={<BlogPost />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/tools/assessments" element={<Assessments />} />
+              <Route path="/tools/affirmations" element={<Affirmations />} />
+              <Route path="/srcs" element={<Reflect />} />
+              <Route path="/assessment/mental-fitness-index" element={<MentalFitnessIndexPage />} />
+              <Route path="/assessment/entrepreneurial-potential" element={<EntrepreneurialPotential />} />
+              <Route path="/assessment/emotionalintelligenceevaluator" element={<EmotionalIntelligenceEvaluator />} />
+              <Route path="/assessment/resiliencescoreanalyzer" element={<ResilienceScoreAnalyzer />} />
+              <Route path="/assessment/burnoutriskassessment" element={<BurnoutRiskAssessment />} />
+              <Route path="/assessment/productivity-style-quiz" element={<ProductivityStyleQuiz />} />
+              <Route path="/assessment/leadership" element={<LeadershipAssessment />} />
+              <Route path="/admin/insights" element={<AdminInsights />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+          <Footer />
+        </div>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;

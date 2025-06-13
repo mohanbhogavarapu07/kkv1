@@ -4,6 +4,11 @@ import { useNavigate } from 'react-router-dom';
 const Affirmations = () => {
   const navigate = useNavigate();
 
+  const handleReflectClick = () => {
+    // Navigate to the reflect page within the same site
+    navigate('/srcs');
+  };
+
   return (
     <div>
       <section className="section pb-0">
@@ -36,7 +41,7 @@ const Affirmations = () => {
               </div>
               <div className="flex justify-center">
                 <button
-                  onClick={() => navigate("/tools/reflect")}
+                  onClick={handleReflectClick}
                   className="bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 transition font-semibold transform hover:scale-105 duration-200"
                 >
                   Continue to Reflect
