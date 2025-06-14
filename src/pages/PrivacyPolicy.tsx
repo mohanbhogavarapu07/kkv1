@@ -3,7 +3,7 @@ import React from "react";
 const PrivacyPolicy = () => (
   <div className="container mx-auto py-12 max-w-3xl">
     <h1 className="font-playfair text-3xl mb-6">Privacy Policy</h1>
-    <p className="mb-4">At Krishna Kumar, your privacy isn't just a checkbox — it's a promise.</p>
+    <p className="mb-4">At Yadlapalli Krishna Kumar, your privacy isn't just a checkbox — it's a promise.</p>
     <p className="mb-4">We're committed to protecting your personal information, being fully transparent about how we use it, and respecting your trust every step of the way.</p>
     <h2 className="font-semibold text-xl mt-8 mb-2">1. What We Collect — and Why</h2>
     <p className="mb-4">When you interact with our website or services, we may ask for a few details like your name, email, or message. You'll typically provide this information when you:</p>

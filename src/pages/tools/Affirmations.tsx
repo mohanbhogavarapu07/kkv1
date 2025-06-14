@@ -1,5 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from "../../../srcs/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../srcs/components/ui/card";
+import { Badge } from "../../../srcs/components/ui/badge";
+import { CheckCircle2 } from "lucide-react";
 
 const Affirmations = () => {
   const navigate = useNavigate();
