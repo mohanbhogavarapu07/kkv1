@@ -66,7 +66,7 @@ const Navbar = () => {
     <nav className={`fixed top-0 left-0 w-full bg-white z-50 border-b border-gray-200 py-4 px-4 md:px-8 transition-transform duration-300 ${showNavbar ? '' : '-translate-y-full'}`}>
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-xl md:text-2xl font-playfair font-medium tracking-tight">
-          YADLAPALLI KRISHNA KUMAR
+          KRISHNA KUMAR YADLAPALLI
         </Link>
         
         {/* Desktop Menu */}

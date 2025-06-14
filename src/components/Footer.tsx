@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <Link to="/" className="text-lg font-playfair font-medium tracking-tight">
-              YADLAPALLI KRISHNA KUMAR
+              KRISHNA KUMAR YADLAPALLI
             </Link>
           </div>
           
@@ -31,7 +31,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-8 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-gray-500 font-playfair">© {currentYear} Yadlapalli Krishna Kumar. All rights reserved.</p>
+          <p className="text-xs text-gray-500 font-playfair">© {currentYear} Krishna Kumar Yadlapalli. All rights reserved.</p>
           <div className="flex gap-4 text-xs text-gray-500">
             <Link to="/terms" className="hover:text-gray-700 transition-colors font-playfair">
               Terms and Conditions

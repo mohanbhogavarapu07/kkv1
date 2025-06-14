@@ -3,9 +3,9 @@ import React from "react";
 const TermsAndConditions = () => (
   <div className="container mx-auto py-12 max-w-3xl">
     <h1 className="font-playfair text-3xl mb-6">Terms & Conditions</h1>
-    <p className="mb-4">Welcome to Yadlapalli Krishna Kumar's digital space. By choosing to visit this website or use any of the coaching, consulting, or assessment services we offer, you're agreeing to the terms below. They're designed to protect both of us and ensure a clear understanding of our working relationship.</p>
+    <p className="mb-4">Welcome to Krishna Kumar Yadlapalli's digital space. By choosing to visit this website or use any of the coaching, consulting, or assessment services we offer, you're agreeing to the terms below. They're designed to create a clear, respectful relationship between us.</p>
     <h2 className="font-semibold text-xl mt-8 mb-2">1. Who We Are</h2>
-    <p className="mb-4">This site is operated by Yadlapalli Krishna Kumar, offering coaching, personal development tools, and thought leadership content — all aimed at helping individuals and organizations grow with purpose.</p>
+    <p className="mb-4">This site is operated by Krishna Kumar Yadlapalli, offering coaching, personal development tools, and thought leadership content — all aimed at helping individuals and organizations grow with purpose.</p>
     <h2 className="font-semibold text-xl mt-8 mb-2">2. Using This Website</h2>
     <ul className="list-disc pl-6 mb-4">
       <li>Use the site for personal and professional growth, not for harmful or illegal activities</li>
@@ -37,7 +37,7 @@ const TermsAndConditions = () => (
       <li>Acknowledge that results and outcomes vary depending on personal effort and context</li>
     </ul>
     <h2 className="font-semibold text-xl mt-8 mb-2">6. Intellectual Property</h2>
-    <p className="mb-4">All content on this website — including articles, assessments, graphics, and session materials — is owned by Yadlapalli Krishna Kumar unless stated otherwise. Please don't copy, reproduce, or distribute anything without explicit permission.</p>
+    <p className="mb-4">All content on this website — including articles, assessments, graphics, and session materials — is owned by Krishna Kumar Yadlapalli unless stated otherwise. Please don't copy, reproduce, or distribute anything without explicit permission.</p>
     <h2 className="font-semibold text-xl mt-8 mb-2">7. Changes & Updates</h2>
     <p className="mb-4">We may update these terms now and then to reflect changes in services or legal requirements. When we do, we'll update the date at the bottom. Your continued use of the site means you agree to the latest version.</p>
     <h2 className="font-semibold text-xl mt-8 mb-2">8. Contact</h2>
