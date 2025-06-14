@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -13,7 +12,7 @@ const ServiceDetail = () => {
       description: "One-on-one coaching for leaders navigating complexity, change, and performance pressure. Custom frameworks for decision-making, strategic clarity, and sustainable high performance.",
       content: `
         <h2>Executive Coaching</h2>
-        <p>Krishna Kumar's executive coaching program is designed specifically for senior leaders facing extraordinary demands on their time, energy, and decision-making capacity. This highly personalized engagement creates a confidential space to develop strategic clarity, enhance leadership presence, and build sustainable performance systems.</p>
+        <p>Yadlapalli Krishna Kumar's executive coaching program is designed specifically for senior leaders facing extraordinary demands on their time, energy, and decision-making capacity. This highly personalized engagement creates a confidential space to develop strategic clarity, enhance leadership presence, and build sustainable performance systems.</p>
         
         <h3>The Approach</h3>
         <p>Unlike generic coaching programs, this approach integrates:</p>
@@ -400,7 +399,7 @@ const ServiceDetail = () => {
       description: "Engaging presentations and interactive workshops on productivity, performance psychology, and strategic execution for conferences, leadership teams, and organizations.",
       content: `
         <h2>Speaking & Workshops</h2>
-        <p>Krishna Kumar delivers impactful keynotes and workshops that combine evidence-based insights with practical frameworks. Unlike typical motivational talks, these sessions provide actionable approaches that audience members can apply immediately to enhance performance, productivity, and strategic effectiveness.</p>
+        <p>Yadlapalli Krishna Kumar delivers impactful keynotes and workshops that combine evidence-based insights with practical frameworks. Unlike typical motivational talks, these sessions provide actionable approaches that audience members can apply immediately to enhance performance, productivity, and strategic effectiveness.</p>
         
         <h3>Speaking Approach</h3>
         <p>Every presentation combines three essential elements:</p>
@@ -472,7 +471,7 @@ const ServiceDetail = () => {
         </ul>
         
         <h3>Participant Experience</h3>
-        <p>Audiences consistently highlight three aspects of Krishna's presentations:</p>
+        <p>Audiences consistently highlight three aspects of Yadlapalli Krishna's presentations:</p>
         <ul>
           <li><strong>Actionable Content:</strong> "Finally, a speaker who provided frameworks we can actually use tomorrow."</li>
           <li><strong>Evidence-Based Approach:</strong> "Refreshing to hear insights based on research rather than just anecdotes."</li>
