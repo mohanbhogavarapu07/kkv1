@@ -36,6 +36,11 @@ const assessments = [
     name: "Mental Fitness Index",
     description: "Gauge your cognitive stamina, focus endurance, and mental agility to unlock your peak performance.",
     slug: "mental-fitness-index"
+  },
+  {
+    name: "Money Flow Decoder",
+    description: "Analyze your financial patterns, spending habits, and money mindset to optimize your wealth-building journey.",
+    slug: "money-flow-decoder"
   }
 ];
 
@@ -65,30 +70,40 @@ const Assessments = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    try {
-      // Save assessment data
-      const response = await fetch('https://kk-backend-wra3.onrender.com/api/assessment/start', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          gender: formData.gender,
-          age: formData.age,
-          assessmentType: currentAssessment,
-          attempted: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save assessment data');
-      }
-
-      const data = await response.json();
+    // For moneyflow assessment, navigate directly without API call
+    if (currentAssessment === 'money-flow-decoder') {
       setShowModal(false);
+      navigate('/moneyflow');
+      return;
+    }
+    
+         try {
+       // Save assessment data for other assessments
+       const response = await fetch('https://kk-backend-wra3.onrender.com/api/assessment/start', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({
+           name: formData.name,
+           gender: formData.gender,
+           age: formData.age,
+           assessmentType: currentAssessment,
+           attempted: true,
+           createdAt: new Date().toISOString(),
+           updatedAt: new Date().toISOString()
+         }),
+       });
+
+       // If API fails, still proceed with navigation (don't block user experience)
+       if (!response.ok) {
+         console.warn('API call failed, but proceeding with assessment:', response.status);
+       } else {
+         const data = await response.json();
+         console.log('Assessment data saved:', data);
+       }
+
+       setShowModal(false);
       
       // Navigate to assessment after form submission
       switch (currentAssessment) {
@@ -116,10 +131,11 @@ const Assessments = () => {
         default:
           console.error('Unknown assessment type:', currentAssessment);
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to start assessment. Please try again.');
-    }
+         } catch (error) {
+       console.error('Error:', error);
+       // Don't show alert, just log the error and proceed
+       console.warn('API error occurred, but proceeding with assessment');
+     }
   };
 
   return (
