@@ -73,7 +73,7 @@ const Assessments = () => {
     // For moneyflow assessment, navigate directly without API call
     if (currentAssessment === 'money-flow-decoder') {
       setShowModal(false);
-      navigate('/moneyflow');
+      navigate('/assessment/money-flow-decoder');
       return;
     }
     
@@ -127,6 +127,9 @@ const Assessments = () => {
           break;
         case 'mental-fitness-index':
           navigate('/assessment/mental-fitness-index');
+          break;
+        case 'money-flow-decoder':
+          navigate('/assessment/money-flow-decoder');
           break;
         default:
           console.error('Unknown assessment type:', currentAssessment);
