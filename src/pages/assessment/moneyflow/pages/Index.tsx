@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { MoneyAssessment } from '../components/MoneyAssessment';
 import { AssessmentResults } from '../components/AssessmentResults';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { TrendingUp, Heart, Brain, Target, DollarSign, Check, ArrowRight } from 'lucide-react';
 
 interface AssessmentData {
