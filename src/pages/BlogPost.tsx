@@ -35,7 +35,6 @@ const BlogPost = () => {
       .replace(/–/g, '–') // Replace en dash with proper en dash
       .replace(/-\s+/g, '') // Remove hyphens followed by spaces
       .replace(/\s+-/g, '') // Remove spaces followed by hyphens
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
       .trim();
   };
 
@@ -110,10 +109,16 @@ const BlogPost = () => {
           </ul>
         );
       case 'paragraph':
+        // Split content by line breaks and render each paragraph separately
+        const paragraphItems = cleanedContent.split('\n').filter(p => p.trim());
         return (
-          <p className="mb-4 leading-relaxed text-gray-700">
-            {cleanedContent}
-          </p>
+          <>
+            {paragraphItems.map((paragraph, index) => (
+              <p key={index} className="mb-4 leading-relaxed text-gray-700">
+                {paragraph}
+              </p>
+            ))}
+          </>
         );
       default:
         return null;

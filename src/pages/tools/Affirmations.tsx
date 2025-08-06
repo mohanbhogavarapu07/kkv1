@@ -4,7 +4,7 @@ import WoopIndex from "../mind/woop-your-way/pages/Index";
 import AtomicIndex from "../mind/atomic-habits/pages/Index";
 import MindfulIndex from "../mind/mindful/pages/Index";
 
-const MasterYourMind = () => {
+const Affirmations = () => {
   const navigate = useNavigate();
   const [openTool, setOpenTool] = React.useState<string | null>(null);
 
@@ -36,7 +36,7 @@ const MasterYourMind = () => {
       <section className="section pb-0">
         <div className="container">
           <div className="max-w-3xl mx-auto">
-            <h1 className="font-playfair">Master Your Mind</h1>
+            <h1 className="font-playfair">Affirmations</h1>
             <p className="text-xl text-gray-700 mb-6">
               Practical tools and cognitive strategies designed to help you take control of your thoughts, build mental clarity, and unlock high-performance thinking.
             </p>
@@ -80,4 +80,4 @@ const MasterYourMind = () => {
   );
 };
 
-export default MasterYourMind; 
+export default Affirmations;

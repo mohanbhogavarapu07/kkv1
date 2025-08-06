@@ -1,73 +1,91 @@
-# Welcome to your Lovable project
+# Krishna Kumar Yadlapalli - Portfolio & Tools
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/b18f9b78-0e8b-4b6e-b44c-450fcb694f3c
+This is a professional portfolio and tools website built with modern web technologies. The project showcases various assessments, mental tools, and professional services.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Professional Portfolio**: Showcase of skills, experience, and projects
+- **Assessment Tools**: Various psychological and professional assessments
+- **Mental Tools**: Cognitive behavioral therapy and habit-building tools
+- **Blog/Insights**: Professional articles and insights
+- **Contact System**: Professional contact and inquiry management
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/b18f9b78-0e8b-4b6e-b44c-450fcb694f3c) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
+## Technologies Used
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Routing**: React Router DOM
+- **State Management**: React Query for server state
+- **Forms**: React Hook Form with Zod validation
+- **UI Components**: Radix UI primitives with custom styling
 
-## How can I deploy this project?
+## Getting Started
 
-Simply open [Lovable](https://lovable.dev/projects/b18f9b78-0e8b-4b6e-b44c-450fcb694f3c) and click on Share -> Publish.
+### Prerequisites
 
-## Can I connect a custom domain to my Lovable project?
+- Node.js (v18 or higher)
+- npm or yarn package manager
 
-Yes, you can!
+### Installation
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd kkv1
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+4. Open your browser and navigate to `http://localhost:8080`
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
+
+## Project Structure
+
+```
+src/
+├── components/     # Reusable UI components
+├── pages/         # Page components and routing
+├── hooks/         # Custom React hooks
+├── lib/           # Utility functions and configurations
+├── data/          # Static data and configurations
+└── styles/        # Global styles and CSS
+```
+
+## Deployment
+
+The project can be deployed to any static hosting service like:
+- Vercel
+- Netlify
+- GitHub Pages
+- AWS S3 + CloudFront
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is private and proprietary.

@@ -22,10 +22,11 @@ import ResilienceScoreAnalyzer from './pages/assessment/ResilienceScoreAnalyzer'
 import BurnoutRiskAssessment from './pages/assessment/BurnoutRiskAssessment';
 import ProductivityStyleQuiz from './pages/assessment/ProductivityStyleQuiz';
 import LeadershipAssessment from './pages/assessment/LeadershipAssessment';
+import MoneyFlow from './pages/assessment/MoneyFlow';
 import AdminInsights from './pages/admin/Insights';
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
-import MasterYourMind from "./pages/tools/MasterYourMind";
+import Affirmations from "./pages/tools/Affirmations";
 import Reflect from "../srcs/pages/Index";
 import "../srcs/index.css"; // Import the srcs styles
 import MindWoopYourWay from "./pages/MindWoopYourWay";
@@ -52,7 +53,7 @@ const App = () => (
               <Route path="/insights/:slug" element={<BlogPost />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/tools/assessments" element={<Assessments />} />
-              <Route path="/tools/masteryourmind" element={<MasterYourMind />} />
+              <Route path="/tools/affirmations" element={<Affirmations />} />
               <Route path="/srcs" element={<Reflect />} />
               <Route path="/assessment/mental-fitness-index" element={<MentalFitnessIndexPage />} />
               <Route path="/assessment/entrepreneurial-potential" element={<EntrepreneurialPotential />} />
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/assessment/burnoutriskassessment" element={<BurnoutRiskAssessment />} />
               <Route path="/assessment/productivity-style-quiz" element={<ProductivityStyleQuiz />} />
               <Route path="/assessment/leadership" element={<LeadershipAssessment />} />
+              <Route path="/assessment/money-flow" element={<MoneyFlow />} />
               <Route path="/admin/insights" element={<AdminInsights />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsAndConditions />} />

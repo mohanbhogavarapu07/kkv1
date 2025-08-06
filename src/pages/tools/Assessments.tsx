@@ -36,6 +36,11 @@ const assessments = [
     name: "Mental Fitness Index",
     description: "Gauge your cognitive stamina, focus endurance, and mental agility to unlock your peak performance.",
     slug: "mental-fitness-index"
+  },
+  {
+    name: "Money Relationship Assessment",
+    description: "Discover and transform your relationship with money across four key dimensions: feelings, beliefs, actions, and financial reality.",
+    slug: "money-relationship"
   }
 ];
 
@@ -76,7 +81,7 @@ const Assessments = () => {
           name: formData.name,
           gender: formData.gender,
           age: formData.age,
-          assessmentType: currentAssessment,
+          assessmentType: currentAssessment === 'money-relationship' ? 'productivity-style' : currentAssessment,
           attempted: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -112,6 +117,9 @@ const Assessments = () => {
           break;
         case 'mental-fitness-index':
           navigate('/assessment/mental-fitness-index');
+          break;
+        case 'money-relationship':
+          navigate('/assessment/money-flow');
           break;
         default:
           console.error('Unknown assessment type:', currentAssessment);
