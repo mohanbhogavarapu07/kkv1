@@ -92,28 +92,9 @@ const Blog = () => {
                 />
               ))}
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 ">
               <div className="border border-gray-200 p-6 sticky top-24">
-                <h3 className="text-lg font-playfair mb-6">Categories</h3>
-                <ul className="space-y-3">
-                  <li>
-                    <a href="#" className="">Productivity</a>
-                  </li>
-                  <li>
-                    <a href="#" className="">Leadership</a>
-                  </li>
-                  <li>
-                    <a href="#" className="">Performance Psychology</a>
-                  </li>
-                  <li>
-                    <a href="#" className="">Strategic Thinking</a>
-                  </li>
-                  <li>
-                    <a href="#" className="">Project Management</a>
-                  </li>
-                </ul>
-                
-                <div className="mt-12">
+                <div>
                   <NewsletterSubscription />
                 </div>
               </div>

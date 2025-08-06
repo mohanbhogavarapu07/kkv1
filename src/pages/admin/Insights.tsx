@@ -91,7 +91,7 @@ const Insights = () => {
 
     // Take only the last character if multiple characters are pasted
     const digit = value.slice(-1);
-    
+
     const newOtp = [...otp];
     newOtp[index] = digit;
     setOtp(newOtp);
@@ -150,8 +150,8 @@ const Insights = () => {
       setOtp(newOtp);
       // Focus the next empty input or the last input
       setTimeout(() => {
-        const nextEmptyIndex = newOtp.findIndex(digit => !digit);
-        const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex;
+      const nextEmptyIndex = newOtp.findIndex(digit => !digit);
+      const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex;
         const nextInput = otpInputRefs.current[focusIndex];
         if (nextInput) {
           nextInput.focus();
@@ -227,7 +227,7 @@ const Insights = () => {
       
       const data = await response.json();
       console.log('Fetched posts:', data);
-      setPosts(data);
+        setPosts(data);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to fetch posts. Please check console for details.');
@@ -302,7 +302,7 @@ const Insights = () => {
     try {
       setUploading(true);
       const token = localStorage.getItem('adminToken');
-      const url = currentPost._id
+      const url = currentPost._id 
         ? `${API_BASE_URL}/api/blog/posts/${currentPost._id}`
         : `${API_BASE_URL}/api/blog/posts`;
       
@@ -410,7 +410,7 @@ const Insights = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           content: `New Blog Post: ${post.title}\n\n${post.excerpt}\n\nRead more at: ${window.location.origin}/insights/${post.slug}`
         }),
         credentials: 'include'
@@ -448,25 +448,25 @@ const Insights = () => {
       const postData = await response.json();
       console.log('Fetched post data:', postData);
 
-      // If the post has sections, join them for editing
+    // If the post has sections, join them for editing
       let content = postData.content;
       if (!content && Array.isArray((postData as any).sections)) {
         content = (postData as any).sections.map((s: any) => s.content).join('\n\n');
-      }
+    }
 
       // Set the current post with all data including attachments
-      setCurrentPost({
+    setCurrentPost({
         _id: postData._id,
         title: postData.title,
-        content: content,
+      content: content,
         excerpt: postData.excerpt,
         isPublished: postData.isPublished,
         attachments: postData.attachments || []
-      });
+    });
 
       // Clear any existing new attachments
       setAttachments([]);
-      setIsEditing(true);
+    setIsEditing(true);
     } catch (error) {
       console.error('Error loading post for editing:', error);
       toast.error('Failed to load post for editing');
@@ -736,7 +736,7 @@ const Insights = () => {
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <p>No posts found.</p>
+          <p>No posts found.</p>
             <p className="text-sm mt-2">Create your first post using the form above.</p>
           </div>
         ) : (
