@@ -20,7 +20,7 @@ const Navbar = () => {
 
   const toolsItems = [
     { name: "Assessments", path: "/tools/assessments" },
-    { name: "Affirmations", path: "/tools/affirmations" }
+    { name: "Master Your Mind", path: "/tools/masteryourmind" }
   ];
 
   useEffect(() => {

@@ -33,10 +33,10 @@ const Footer = () => {
         <div className="mt-8 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-gray-500 font-playfair">© {currentYear} Krishna Kumar Yadlapalli. All rights reserved.</p>
           <div className="flex gap-4 text-xs text-gray-500">
-            <Link to="/terms" className="hover:text-gray-700 transition-colors font-playfair">
+            <Link to="/terms" className="hover:text-gray-700 transition-colors font-playfair" onClick={() => { setTimeout(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, 0); }}>
               Terms and Conditions
             </Link>
-            <Link to="/privacy" className="hover:text-gray-700 transition-colors font-playfair">
+            <Link to="/privacy" className="hover:text-gray-700 transition-colors font-playfair" onClick={() => { setTimeout(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, 0); }}>
               Privacy & Policies
             </Link>
           </div>

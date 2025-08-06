@@ -26,9 +26,12 @@ import MoneyFlowAssessment from './pages/assessment/moneyflow';
 import AdminInsights from './pages/admin/Insights';
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
-import Affirmations from "./pages/tools/Affirmations";
+import MasterYourMind from "./pages/tools/MasterYourMind";
 import Reflect from "../srcs/pages/Index";
 import "../srcs/index.css"; // Import the srcs styles
+import MindWoopYourWay from "./pages/MindWoopYourWay";
+import MindAtomicHabits from "./pages/MindAtomicHabits";
+import MindMindful from "./pages/MindMindful";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +53,7 @@ const App = () => (
               <Route path="/insights/:slug" element={<BlogPost />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/tools/assessments" element={<Assessments />} />
-              <Route path="/tools/affirmations" element={<Affirmations />} />
+              <Route path="/tools/masteryourmind" element={<MasterYourMind />} />
               <Route path="/srcs" element={<Reflect />} />
               <Route path="/moneyflow" element={<MoneyFlowAssessment />} />
               <Route path="/assessment/money-flow-decoder" element={<MoneyFlowAssessment />} />
@@ -64,6 +67,9 @@ const App = () => (
               <Route path="/admin/insights" element={<AdminInsights />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="/mind/woop-your-way" element={<MindWoopYourWay />} />
+              <Route path="/mind/atomic-habits" element={<MindAtomicHabits />} />
+              <Route path="/mind/mindful" element={<MindMindful />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
