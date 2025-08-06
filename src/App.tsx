@@ -22,7 +22,6 @@ import ResilienceScoreAnalyzer from './pages/assessment/ResilienceScoreAnalyzer'
 import BurnoutRiskAssessment from './pages/assessment/BurnoutRiskAssessment';
 import ProductivityStyleQuiz from './pages/assessment/ProductivityStyleQuiz';
 import LeadershipAssessment from './pages/assessment/LeadershipAssessment';
-import MoneyFlowAssessment from './pages/assessment/moneyflow/App';
 import AdminInsights from './pages/admin/Insights';
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
@@ -52,7 +51,6 @@ const App = () => (
               <Route path="/tools/assessments" element={<Assessments />} />
               <Route path="/tools/affirmations" element={<Affirmations />} />
               <Route path="/srcs" element={<Reflect />} />
-              <Route path="/moneyflow" element={<MoneyFlowAssessment />} />
               <Route path="/assessment/mental-fitness-index" element={<MentalFitnessIndexPage />} />
               <Route path="/assessment/entrepreneurial-potential" element={<EntrepreneurialPotential />} />
               <Route path="/assessment/emotionalintelligenceevaluator" element={<EmotionalIntelligenceEvaluator />} />
